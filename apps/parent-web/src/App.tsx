@@ -12,12 +12,26 @@ import {
   supabase
 } from "./lib/supabase";
 
+import {
+  getConsentState,
+  getCurrentPrivacyNotice,
+  saveInitialConsent,
+  type ConsentState,
+  type PrivacyNotice
+} from "./services/consentService";
+
+import {
+  getErrorMessage
+} from "./utils/errorMessage";
+
+
 interface ChildProfile {
   id: string;
   nickname: string;
   age_band: string;
   preferred_language: string;
 }
+
 
 function App() {
   const [session, setSession] =
@@ -35,6 +49,45 @@ function App() {
   const [message, setMessage] =
     useState<string | null>(null);
 
+  const [busy, setBusy] =
+    useState(false);
+
+
+  const [
+    privacyNotice,
+    setPrivacyNotice
+  ] =
+    useState<PrivacyNotice | null>(
+      null
+    );
+
+  const [
+    consentState,
+    setConsentState
+  ] =
+    useState<ConsentState | null>(
+      null
+    );
+
+  const [
+    privacyAccepted,
+    setPrivacyAccepted
+  ] =
+    useState(false);
+
+  const [
+    essentialAccepted,
+    setEssentialAccepted
+  ] =
+    useState(false);
+
+  const [
+    analyticsAccepted,
+    setAnalyticsAccepted
+  ] =
+    useState(false);
+
+
   const [children, setChildren] =
     useState<ChildProfile[]>([]);
 
@@ -47,28 +100,35 @@ function App() {
   const [
     preferredLanguage,
     setPreferredLanguage
-  ] = useState("ms");
+  ] =
+    useState("ms");
+
 
   useEffect(() => {
     void supabase.auth
       .getSession()
-      .then(({ data }) => {
-        setSession(
-          data.session
-        );
+      .then(
+        ({ data }) => {
+          setSession(
+            data.session
+          );
 
-        setUser(
-          data.session?.user ??
-            null
-        );
-      });
+          setUser(
+            data.session?.user ??
+              null
+          );
+        }
+      );
 
     const {
       data: subscription
     } =
       supabase.auth
         .onAuthStateChange(
-          (_event, nextSession) => {
+          (
+            _event,
+            nextSession
+          ) => {
             setSession(
               nextSession
             );
@@ -86,20 +146,77 @@ function App() {
     };
   }, []);
 
+
   useEffect(() => {
     if (!user) {
       setChildren([]);
+      setConsentState(null);
+      setPrivacyNotice(null);
+
       return;
     }
 
-    void loadChildren();
+    void loadParentData();
   }, [user]);
 
-  async function loadChildren() {
-    if (!user) {
-      return;
-    }
 
+  async function loadParentData() {
+    setBusy(true);
+    setMessage(null);
+
+    try {
+      const notice =
+        await getCurrentPrivacyNotice();
+
+      setPrivacyNotice(
+        notice
+      );
+
+      if (!notice) {
+        setConsentState(null);
+
+        setMessage(
+          "Tiada notis privasi aktif ditemui."
+        );
+
+        return;
+      }
+
+      const consent =
+        await getConsentState(
+          notice.id
+        );
+
+      setConsentState(
+        consent
+      );
+
+      setAnalyticsAccepted(
+        consent
+          .productAnalyticsAccepted
+      );
+
+      if (
+        consent
+          .privacyNoticeAccepted &&
+        consent
+          .essentialProcessingAccepted
+      ) {
+        await loadChildren();
+      } else {
+        setChildren([]);
+      }
+    } catch (error) {
+      setMessage(
+        getErrorMessage(error)
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+
+  async function loadChildren() {
     const {
       data,
       error
@@ -117,11 +234,7 @@ function App() {
         );
 
     if (error) {
-      setMessage(
-        error.message
-      );
-
-      return;
+      throw error;
     }
 
     setChildren(
@@ -129,62 +242,119 @@ function App() {
     );
   }
 
+
   async function signUp() {
+    setBusy(true);
     setMessage(null);
 
-    const {
-      error
-    } =
-      await supabase.auth
-        .signUp({
-          email,
-          password
-        });
+    try {
+      const {
+        error
+      } =
+        await supabase.auth
+          .signUp({
+            email,
+            password
+          });
 
-    if (error) {
+      if (error) {
+        throw error;
+      }
+
       setMessage(
-        error.message
+        "Akaun berjaya didaftarkan. Semak e-mel jika pengesahan diperlukan."
       );
-
-      return;
+    } catch (error) {
+      setMessage(
+        getErrorMessage(error)
+      );
+    } finally {
+      setBusy(false);
     }
-
-    setMessage(
-      "Akaun berjaya didaftarkan. Semak e-mel jika pengesahan diperlukan."
-    );
   }
+
 
   async function signIn() {
+    setBusy(true);
     setMessage(null);
 
-    const {
-      error
-    } =
-      await supabase.auth
-        .signInWithPassword({
-          email,
-          password
-        });
+    try {
+      const {
+        error
+      } =
+        await supabase.auth
+          .signInWithPassword({
+            email,
+            password
+          });
 
-    if (error) {
+      if (error) {
+        throw error;
+      }
+
       setMessage(
-        error.message
+        "Log masuk berjaya."
       );
-
-      return;
+    } catch (error) {
+      setMessage(
+        getErrorMessage(error)
+      );
+    } finally {
+      setBusy(false);
     }
-
-    setMessage(
-      "Log masuk berjaya."
-    );
   }
 
+
   async function signOut() {
+    setBusy(true);
+
     await supabase.auth
       .signOut();
 
     setMessage(null);
+    setBusy(false);
   }
+
+
+  async function submitConsent() {
+    if (!privacyNotice) {
+      return;
+    }
+
+    if (
+      !privacyAccepted ||
+      !essentialAccepted
+    ) {
+      setMessage(
+        "Penerimaan Notis Privasi dan pemprosesan data penting diperlukan untuk menggunakan akaun Akal Budi."
+      );
+
+      return;
+    }
+
+    setBusy(true);
+    setMessage(null);
+
+    try {
+      await saveInitialConsent(
+        privacyNotice.id,
+        analyticsAccepted
+      );
+
+      await loadParentData();
+
+      setMessage(
+        "Pilihan privasi berjaya direkodkan."
+      );
+    } catch (error) {
+      setMessage(
+        getErrorMessage(error)
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
 
   async function createChild() {
     if (!user) {
@@ -192,8 +362,20 @@ function App() {
     }
 
     if (
-      nickname.trim()
-        .length === 0
+      !consentState
+        ?.privacyNoticeAccepted ||
+      !consentState
+        ?.essentialProcessingAccepted
+    ) {
+      setMessage(
+        "Lengkapkan tetapan privasi terlebih dahulu."
+      );
+
+      return;
+    }
+
+    if (
+      nickname.trim().length === 0
     ) {
       setMessage(
         "Masukkan nama panggilan."
@@ -202,65 +384,64 @@ function App() {
       return;
     }
 
+    setBusy(true);
     setMessage(null);
 
-    const {
-      error
-    } =
-      await supabase
-        .from("children")
-        .insert({
-          parent_id:
-            user.id,
+    try {
+      const {
+        error
+      } =
+        await supabase
+          .from("children")
+          .insert({
+            parent_id:
+              user.id,
 
-          nickname:
-            nickname.trim(),
+            nickname:
+              nickname.trim(),
 
-          age_band:
-            ageBand,
+            age_band:
+              ageBand,
 
-          preferred_language:
-            preferredLanguage
-        });
+            preferred_language:
+              preferredLanguage
+          });
 
-    if (error) {
+      if (error) {
+        throw error;
+      }
+
+      setNickname("");
+
+      await loadChildren();
+
       setMessage(
-        error.message
+        "Profil anak berjaya dicipta."
       );
-
-      return;
+    } catch (error) {
+      setMessage(
+        getErrorMessage(error)
+      );
+    } finally {
+      setBusy(false);
     }
-
-    setNickname("");
-
-    await loadChildren();
-
-    setMessage(
-      "Profil anak berjaya dicipta."
-    );
   }
+
 
   if (!session) {
     return (
       <main className="mx-auto min-h-screen max-w-lg px-5 py-10">
-        <header className="mb-8">
-          <p className="text-sm font-bold uppercase tracking-[0.2em] text-amber-700">
-            HIBEYA
-          </p>
-
-          <h1 className="mt-1 text-3xl font-bold text-slate-900">
-            Akal Budi
-          </h1>
-
-          <p className="mt-1 text-slate-600">
-            Parent Portal
-          </p>
-        </header>
+        <BrandHeader />
 
         <section className="rounded-3xl bg-white p-6 shadow-sm">
           <h2 className="text-xl font-bold text-slate-900">
             Akaun Ibu Bapa / Penjaga
           </h2>
+
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Akaun ini adalah untuk orang dewasa.
+            Kanak-kanak tidak memerlukan akaun sendiri.
+          </p>
 
           <label className="mt-5 block text-sm font-semibold text-slate-700">
             E-mel
@@ -268,6 +449,7 @@ function App() {
 
           <input
             type="email"
+            autoComplete="email"
             value={email}
             onChange={
               (event) =>
@@ -284,6 +466,7 @@ function App() {
 
           <input
             type="password"
+            autoComplete="current-password"
             value={password}
             onChange={
               (event) =>
@@ -297,65 +480,173 @@ function App() {
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <button
               type="button"
+              disabled={busy}
               onClick={
                 () =>
                   void signUp()
               }
-              className="rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white"
+              className="rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white disabled:opacity-50"
             >
               Daftar
             </button>
 
             <button
               type="button"
+              disabled={busy}
               onClick={
                 () =>
                   void signIn()
               }
-              className="rounded-2xl border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-700"
+              className="rounded-2xl border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-700 disabled:opacity-50"
             >
               Log masuk
             </button>
           </div>
 
-          {message && (
-            <p className="mt-5 rounded-2xl bg-slate-100 px-4 py-3 text-sm text-slate-700">
-              {message}
-            </p>
-          )}
+          <StatusMessage
+            message={message}
+          />
         </section>
       </main>
     );
   }
 
-  return (
-    <main className="mx-auto min-h-screen max-w-3xl px-5 py-10">
-      <header className="mb-8 flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-bold uppercase tracking-[0.2em] text-amber-700">
-            HIBEYA
-          </p>
 
-          <h1 className="mt-1 text-3xl font-bold text-slate-900">
-            Akal Budi
-          </h1>
+  const mandatoryConsentComplete =
+    Boolean(
+      consentState
+        ?.privacyNoticeAccepted &&
+      consentState
+        ?.essentialProcessingAccepted
+    );
 
-          <p className="mt-1 text-sm text-slate-600">
-            {user?.email}
-          </p>
-        </div>
 
-        <button
-          type="button"
-          onClick={
+  if (
+    !mandatoryConsentComplete
+  ) {
+    return (
+      <main className="mx-auto min-h-screen max-w-2xl px-5 py-10">
+        <ParentHeader
+          email={user?.email}
+          onSignOut={
             () =>
               void signOut()
           }
-          className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700"
-        >
-          Log keluar
-        </button>
-      </header>
+        />
+
+        <section className="rounded-3xl bg-white p-6 shadow-sm sm:p-8">
+          <p className="text-sm font-bold uppercase tracking-[0.15em] text-amber-700">
+            Langkah Privasi
+          </p>
+
+          <h2 className="mt-2 text-2xl font-bold text-slate-900">
+            Sebelum mencipta profil anak
+          </h2>
+
+          <p className="mt-3 leading-7 text-slate-600">
+            Kami mahu hanya mengumpulkan data yang benar-benar diperlukan untuk menyediakan pengalaman Akal Budi.
+          </p>
+
+          {privacyNotice && (
+            <div className="mt-6 rounded-2xl bg-slate-50 p-4">
+              <p className="font-semibold text-slate-900">
+                Notis Privasi
+              </p>
+
+              <p className="mt-1 text-sm text-slate-600">
+                Versi{" "}
+                {
+                  privacyNotice.version
+                }
+              </p>
+
+              {privacyNotice.noticeUrl ? (
+                <a
+                  href={
+                    privacyNotice.noticeUrl
+                  }
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-2 inline-block text-sm font-semibold text-amber-700 underline"
+                >
+                  Baca Notis Privasi
+                </a>
+              ) : (
+                <p className="mt-2 text-sm text-amber-800">
+                  Versi pembangunan — notis undang-undang produksi belum diterbitkan.
+                </p>
+              )}
+            </div>
+          )}
+
+          <ConsentCheckbox
+            checked={
+              privacyAccepted
+            }
+            onChange={
+              setPrivacyAccepted
+            }
+            title="Saya telah membaca dan memahami Notis Privasi."
+            description="Diperlukan untuk meneruskan penggunaan akaun."
+          />
+
+          <ConsentCheckbox
+            checked={
+              essentialAccepted
+            }
+            onChange={
+              setEssentialAccepted
+            }
+            title="Saya bersetuju dengan pemprosesan data penting."
+            description="Ini merangkumi data minimum yang diperlukan untuk akaun ibu bapa, profil anak dan kemajuan pembelajaran."
+          />
+
+          <ConsentCheckbox
+            checked={
+              analyticsAccepted
+            }
+            onChange={
+              setAnalyticsAccepted
+            }
+            title="Benarkan analitik produk."
+            description="Pilihan. Tidak diperlukan untuk menggunakan Akal Budi."
+            optional
+          />
+
+          <button
+            type="button"
+            disabled={
+              busy ||
+              !privacyAccepted ||
+              !essentialAccepted
+            }
+            onClick={
+              () =>
+                void submitConsent()
+            }
+            className="mt-7 w-full rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Simpan dan teruskan
+          </button>
+
+          <StatusMessage
+            message={message}
+          />
+        </section>
+      </main>
+    );
+  }
+
+
+  return (
+    <main className="mx-auto min-h-screen max-w-3xl px-5 py-10">
+      <ParentHeader
+        email={user?.email}
+        onSignOut={
+          () =>
+            void signOut()
+        }
+      />
 
       <section className="rounded-3xl bg-white p-6 shadow-sm">
         <h2 className="text-xl font-bold text-slate-900">
@@ -364,6 +655,8 @@ function App() {
 
         <p className="mt-1 text-sm text-slate-600">
           Gunakan nama panggilan sahaja.
+          Jangan masukkan nama penuh, nombor MyKid,
+          sekolah atau maklumat pengenalan lain.
         </p>
 
         <label className="mt-5 block text-sm font-semibold text-slate-700">
@@ -372,13 +665,13 @@ function App() {
 
         <input
           value={nickname}
+          maxLength={40}
           onChange={
             (event) =>
               setNickname(
                 event.target.value
               )
           }
-          maxLength={40}
           className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3"
         />
 
@@ -440,20 +733,19 @@ function App() {
 
         <button
           type="button"
+          disabled={busy}
           onClick={
             () =>
               void createChild()
           }
-          className="mt-6 rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white"
+          className="mt-6 rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white disabled:opacity-50"
         >
           Cipta profil anak
         </button>
 
-        {message && (
-          <p className="mt-5 rounded-2xl bg-slate-100 px-4 py-3 text-sm text-slate-700">
-            {message}
-          </p>
-        )}
+        <StatusMessage
+          message={message}
+        />
       </section>
 
       <section className="mt-6 rounded-3xl bg-white p-6 shadow-sm">
@@ -474,18 +766,25 @@ function App() {
                   className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
                 >
                   <p className="text-lg font-bold text-slate-900">
-                    {child.nickname}
+                    {
+                      child.nickname
+                    }
                   </p>
 
                   <p className="mt-1 text-sm text-slate-600">
                     Umur:{" "}
-                    {child.age_band}
+                    {
+                      child.age_band
+                    }
                   </p>
 
                   <p className="text-sm text-slate-600">
                     Bahasa:{" "}
                     {
-                      child.preferred_language
+                      child.preferred_language ===
+                      "ms"
+                        ? "Bahasa Melayu"
+                        : "English"
                     }
                   </p>
                 </article>
@@ -497,5 +796,137 @@ function App() {
     </main>
   );
 }
+
+
+interface ConsentCheckboxProps {
+  checked: boolean;
+  onChange:
+    (value: boolean) => void;
+  title: string;
+  description: string;
+  optional?: boolean;
+}
+
+
+function ConsentCheckbox({
+  checked,
+  onChange,
+  title,
+  description,
+  optional = false
+}: ConsentCheckboxProps) {
+  return (
+    <label className="mt-5 flex cursor-pointer gap-4 rounded-2xl border border-slate-200 p-4">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={
+          (event) =>
+            onChange(
+              event.target.checked
+            )
+        }
+        className="mt-1 h-5 w-5"
+      />
+
+      <span>
+        <span className="font-semibold text-slate-900">
+          {title}
+
+          {optional && (
+            <span className="ml-2 text-xs font-normal text-slate-500">
+              Pilihan
+            </span>
+          )}
+        </span>
+
+        <span className="mt-1 block text-sm leading-6 text-slate-600">
+          {description}
+        </span>
+      </span>
+    </label>
+  );
+}
+
+
+function BrandHeader() {
+  return (
+    <header className="mb-8">
+      <p className="text-sm font-bold uppercase tracking-[0.2em] text-amber-700">
+        HIBEYA
+      </p>
+
+      <h1 className="mt-1 text-3xl font-bold text-slate-900">
+        Akal Budi
+      </h1>
+
+      <p className="mt-1 text-slate-600">
+        Parent Portal
+      </p>
+    </header>
+  );
+}
+
+
+interface ParentHeaderProps {
+  email:
+    string | undefined;
+
+  onSignOut:
+    () => void;
+}
+
+
+function ParentHeader({
+  email,
+  onSignOut
+}: ParentHeaderProps) {
+  return (
+    <header className="mb-8 flex items-start justify-between gap-4">
+      <div>
+        <p className="text-sm font-bold uppercase tracking-[0.2em] text-amber-700">
+          HIBEYA
+        </p>
+
+        <h1 className="mt-1 text-3xl font-bold text-slate-900">
+          Akal Budi
+        </h1>
+
+        <p className="mt-1 text-sm text-slate-600">
+          {email}
+        </p>
+      </div>
+
+      <button
+        type="button"
+        onClick={
+          onSignOut
+        }
+        className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700"
+      >
+        Log keluar
+      </button>
+    </header>
+  );
+}
+
+
+function StatusMessage({
+  message
+}: {
+  message:
+    string | null;
+}) {
+  if (!message) {
+    return null;
+  }
+
+  return (
+    <p className="mt-5 rounded-2xl bg-slate-100 px-4 py-3 text-sm leading-6 text-slate-700">
+      {message}
+    </p>
+  );
+}
+
 
 export default App;
