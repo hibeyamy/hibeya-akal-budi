@@ -1,0 +1,19 @@
+{
+  "name": "@akal-budi/game-runtime",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@akal-budi/domain": "workspace:*",
+    "@akal-budi/content-schema": "workspace:*"
+  },
+  "scripts": {
+    "build": "echo \"build pending\"",
+    "lint": "echo \"lint pending\"",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"tests pending\"",
+    "clean": "echo \"clean pending\""
+  }
+}

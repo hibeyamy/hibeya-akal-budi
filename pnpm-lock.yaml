@@ -29,6 +29,24 @@ importers:
 
   packages/domain: {}
 
+  packages/game-mechanics:
+    dependencies:
+      '@akal-budi/content-schema':
+        specifier: workspace:*
+        version: link:../content-schema
+      '@akal-budi/game-runtime':
+        specifier: workspace:*
+        version: link:../game-runtime
+
+  packages/game-runtime:
+    dependencies:
+      '@akal-budi/content-schema':
+        specifier: workspace:*
+        version: link:../content-schema
+      '@akal-budi/domain':
+        specifier: workspace:*
+        version: link:../domain
+
 packages:
 
   '@turbo/darwin-64@2.10.11':
