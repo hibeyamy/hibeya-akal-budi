@@ -1,8 +1,21 @@
-import { useMemo, useState } from "react";
+import {
+  useMemo,
+  useState
+} from "react";
 
 import { getAsset } from "@akal-budi/assets";
 import { warnaMerah001 } from "@akal-budi/content-library";
 import { getGameMechanic } from "@akal-budi/game-mechanics";
+
+import {
+  addLocalAnswer,
+  completeLocalSession,
+  createLocalSession
+} from "@akal-budi/offline";
+
+function createSessionId() {
+  return crypto.randomUUID();
+}
 
 export function ActivityPlayer() {
   const activity = warnaMerah001;
@@ -12,15 +25,80 @@ export function ActivityPlayer() {
     [activity.mechanic]
   );
 
-  const [context] = useState(() => mechanic.start(activity));
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [context] = useState(() =>
+    mechanic.start(activity)
+  );
 
-  function handleAnswer(optionId: string) {
-    const answer = mechanic.submitAnswer(context, optionId);
+  const [sessionId] = useState(
+    createSessionId
+  );
 
+  const [answers, setAnswers] = useState<
+    ReturnType<typeof mechanic.submitAnswer>[]
+  >([]);
+
+  const [selectedId, setSelectedId] =
+    useState<string | null>(null);
+
+  const [feedback, setFeedback] =
+    useState<string | null>(null);
+
+  const [sessionInitialised, setSessionInitialised] =
+    useState(false);
+
+  async function ensureSession() {
+    if (sessionInitialised) {
+      return;
+    }
+
+    await createLocalSession({
+      id: sessionId,
+      activityId: activity.id,
+      activityVersion: activity.version,
+      startedAt: context.startedAt
+    });
+
+    setSessionInitialised(true);
+  }
+
+  async function handleAnswer(
+    optionId: string
+  ) {
+    await ensureSession();
+
+    const answer = mechanic.submitAnswer(
+      context,
+      optionId
+    );
+
+    await addLocalAnswer(
+      sessionId,
+      answer
+    );
+
+    const nextAnswers = [
+      ...answers,
+      answer
+    ];
+
+    setAnswers(nextAnswers);
     setSelectedId(optionId);
-    setFeedback(answer.correct ? "Betul! Bagus." : "Cuba lagi.");
+
+    if (answer.correct) {
+      setFeedback("Betul! Bagus.");
+
+      const result = mechanic.complete(
+        context,
+        nextAnswers
+      );
+
+      await completeLocalSession(
+        sessionId,
+        result
+      );
+    } else {
+      setFeedback("Cuba lagi.");
+    }
   }
 
   return (
@@ -55,39 +133,49 @@ export function ActivityPlayer() {
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {activity.options.map((option) => {
-            const asset = getAsset(option.asset);
-            const isSelected = selectedId === option.id;
+          {activity.options.map(
+            (option) => {
+              const asset = getAsset(
+                option.asset
+              );
 
-            return (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => handleAnswer(option.id)}
-                aria-label={asset.alt.ms}
-                className={[
-                  "flex min-h-40 touch-manipulation flex-col items-center justify-center",
-                  "rounded-3xl border-2 px-4 py-6",
-                  "transition duration-150 active:scale-95",
-                  "focus:outline-none focus:ring-4 focus:ring-amber-200",
-                  isSelected
-                    ? "border-amber-500 bg-amber-50"
-                    : "border-slate-200 bg-slate-50 hover:border-amber-300"
-                ].join(" ")}
-              >
-                <span
-                  aria-hidden="true"
-                  className="text-7xl sm:text-8xl"
+              const isSelected =
+                selectedId === option.id;
+
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() =>
+                    void handleAnswer(
+                      option.id
+                    )
+                  }
+                  aria-label={asset.alt.ms}
+                  className={[
+                    "flex min-h-40 touch-manipulation flex-col items-center justify-center",
+                    "rounded-3xl border-2 px-4 py-6",
+                    "transition duration-150 active:scale-95",
+                    "focus:outline-none focus:ring-4 focus:ring-amber-200",
+                    isSelected
+                      ? "border-amber-500 bg-amber-50"
+                      : "border-slate-200 bg-slate-50 hover:border-amber-300"
+                  ].join(" ")}
                 >
-                  {asset.value}
-                </span>
+                  <span
+                    aria-hidden="true"
+                    className="text-7xl sm:text-8xl"
+                  >
+                    {asset.value}
+                  </span>
 
-                <span className="mt-4 text-base font-semibold text-slate-700">
-                  {asset.alt.ms}
-                </span>
-              </button>
-            );
-          })}
+                  <span className="mt-4 text-base font-semibold text-slate-700">
+                    {asset.alt.ms}
+                  </span>
+                </button>
+              );
+            }
+          )}
         </div>
 
         <div

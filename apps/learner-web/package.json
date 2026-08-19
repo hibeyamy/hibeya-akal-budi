@@ -17,6 +17,7 @@
     "@akal-budi/content-library": "workspace:*",
     "@akal-budi/game-mechanics": "workspace:*",
     "@akal-budi/game-runtime": "workspace:*",
+    "@akal-budi/offline": "workspace:*",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },

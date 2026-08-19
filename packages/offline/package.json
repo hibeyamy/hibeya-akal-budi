@@ -1,0 +1,19 @@
+{
+  "name": "@akal-budi/offline",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@akal-budi/game-runtime": "workspace:*",
+    "idb": "^8.0.0"
+  },
+  "scripts": {
+    "build": "echo \"build pending\"",
+    "lint": "echo \"lint pending\"",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"tests pending\"",
+    "clean": "echo \"clean pending\""
+  }
+}
