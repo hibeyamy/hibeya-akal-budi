@@ -6,6 +6,7 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "dependencies": {
+    "@akal-budi/content-architecture": "workspace:*",
     "@akal-budi/content-schema": "workspace:*"
   },
   "scripts": {

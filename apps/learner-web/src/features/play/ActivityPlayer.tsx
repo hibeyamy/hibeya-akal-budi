@@ -4,9 +4,13 @@ import {
   useState
 } from "react";
 
-import { getAsset } from "@akal-budi/assets";
-import { warnaMerah001 } from "@akal-budi/content-library";
-import { getGameMechanic } from "@akal-budi/game-mechanics";
+import {
+  getAsset
+} from "@akal-budi/assets";
+
+import {
+  getGameMechanic
+} from "@akal-budi/game-mechanics";
 
 import {
   addLocalAnswer,
@@ -17,153 +21,395 @@ import {
   type StoredSession
 } from "@akal-budi/offline";
 
-import { useNetworkStatus } from "../../hooks/useNetworkStatus";
-import { localSyncProvider } from "../../services/localSyncProvider";
+import {
+  useNetworkStatus
+} from "../../hooks/useNetworkStatus";
 
-function createSessionId(): string {
+import {
+  localSyncProvider
+} from "../../services/localSyncProvider";
+
+import {
+  resolveRuntimeActivity
+} from "./resolvePlayableActivity";
+
+
+const DEFAULT_ACTIVITY_ID =
+  "warna-merah-001";
+
+
+function createSessionId():
+  string {
   return crypto.randomUUID();
 }
 
+
 export function ActivityPlayer() {
-  const activity = warnaMerah001;
-  const network = useNetworkStatus();
+  const network =
+    useNetworkStatus();
 
-  const mechanic = useMemo(
-    () => getGameMechanic(activity.mechanic),
-    [activity.mechanic]
+
+  const runtimeActivity =
+    useMemo(
+      () =>
+        resolveRuntimeActivity(
+          DEFAULT_ACTIVITY_ID
+        ),
+      []
+    );
+
+
+  if (!runtimeActivity) {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center px-4 py-10">
+        <section className="w-full rounded-[2rem] bg-white p-6 text-center shadow-sm sm:p-8">
+          <p className="text-sm font-bold uppercase tracking-[0.2em] text-amber-700">
+            HIBEYA
+          </p>
+
+          <h1 className="mt-2 text-3xl font-bold text-slate-900">
+            Akal Budi
+          </h1>
+
+          <p className="mt-5 text-slate-600">
+            Aktiviti ini belum tersedia.
+          </p>
+        </section>
+      </main>
+    );
+  }
+
+
+  return (
+    <ResolvedActivityPlayer
+      runtimeActivity={
+        runtimeActivity
+      }
+      network={network}
+    />
   );
+}
 
-  const [context] = useState(() =>
-    mechanic.start(activity)
-  );
 
-  const [sessionId, setSessionId] =
-    useState<string>(() => createSessionId());
+interface ResolvedActivityPlayerProps {
+  runtimeActivity:
+    NonNullable<
+      ReturnType<
+        typeof resolveRuntimeActivity
+      >
+    >;
 
-  const [answers, setAnswers] = useState<
-    ReturnType<typeof mechanic.submitAnswer>[]
-  >([]);
+  network:
+    ReturnType<
+      typeof useNetworkStatus
+    >;
+}
 
-  const [selectedId, setSelectedId] =
-    useState<string | null>(null);
 
-  const [feedback, setFeedback] =
-    useState<string | null>(null);
+function ResolvedActivityPlayer({
+  runtimeActivity,
+  network
+}: ResolvedActivityPlayerProps) {
+  const activity =
+    runtimeActivity
+      .implementation
+      .activity;
 
-  const [sessionInitialised, setSessionInitialised] =
+
+  const catalogue =
+    runtimeActivity
+      .catalogue;
+
+
+  const mechanic =
+    useMemo(
+      () =>
+        getGameMechanic(
+          activity.mechanic
+        ),
+      [
+        activity.mechanic
+      ]
+    );
+
+
+  const [context] =
+    useState(
+      () =>
+        mechanic.start(
+          activity
+        )
+    );
+
+
+  const [
+    sessionId,
+    setSessionId
+  ] =
+    useState<string>(
+      () =>
+        createSessionId()
+    );
+
+
+  const [
+    answers,
+    setAnswers
+  ] =
+    useState<
+      ReturnType<
+        typeof mechanic.submitAnswer
+      >[]
+    >([]);
+
+
+  const [
+    selectedId,
+    setSelectedId
+  ] =
+    useState<
+      string | null
+    >(null);
+
+
+  const [
+    feedback,
+    setFeedback
+  ] =
+    useState<
+      string | null
+    >(null);
+
+
+  const [
+    sessionInitialised,
+    setSessionInitialised
+  ] =
     useState(false);
 
-  const [recoverySession, setRecoverySession] =
-    useState<StoredSession | null>(null);
 
-  const [syncMessage, setSyncMessage] =
-    useState<string | null>(null);
+  const [
+    recoverySession,
+    setRecoverySession
+  ] =
+    useState<
+      StoredSession | null
+    >(null);
+
+
+  const [
+    syncMessage,
+    setSyncMessage
+  ] =
+    useState<
+      string | null
+    >(null);
+
 
   useEffect(() => {
     void getLatestIncompleteSession()
-      .then((session) => {
-        if (session) {
-          setRecoverySession(session);
+      .then(
+        (
+          session
+        ) => {
+          if (
+            session &&
+            session.activityId ===
+              activity.id
+          ) {
+            setRecoverySession(
+              session
+            );
+          }
         }
-      });
-  }, []);
+      );
+  }, [
+    activity.id
+  ]);
+
 
   useEffect(() => {
-    if (!network.online) {
+    if (
+      !network.online
+    ) {
       return;
     }
+
 
     void processPendingSessions(
       localSyncProvider
-    ).then((result) => {
-      if (result.attempted > 0) {
-        setSyncMessage(
-          `${result.succeeded} aktiviti diselaraskan`
-        );
+    ).then(
+      (
+        result
+      ) => {
+        if (
+          result.attempted >
+          0
+        ) {
+          setSyncMessage(
+            `${result.succeeded} aktiviti diselaraskan`
+          );
+        }
       }
-    });
-  }, [network.online]);
+    );
+  }, [
+    network.online
+  ]);
+
 
   async function ensureSession() {
-    if (sessionInitialised) {
+    if (
+      sessionInitialised
+    ) {
       return;
     }
 
+
     await createLocalSession({
-      id: sessionId,
-      activityId: activity.id,
-      activityVersion: activity.version,
-      startedAt: context.startedAt
+      id:
+        sessionId,
+
+      activityId:
+        activity.id,
+
+      activityVersion:
+        activity.version,
+
+      startedAt:
+        context.startedAt
     });
 
-    setSessionInitialised(true);
+
+    setSessionInitialised(
+      true
+    );
   }
+
 
   async function handleAnswer(
     optionId: string
   ) {
     await ensureSession();
 
-    const answer = mechanic.submitAnswer(
-      context,
-      optionId
-    );
+
+    const answer =
+      mechanic.submitAnswer(
+        context,
+        optionId
+      );
+
 
     await addLocalAnswer(
       sessionId,
       answer
     );
 
+
     const nextAnswers = [
       ...answers,
       answer
     ];
 
-    setAnswers(nextAnswers);
-    setSelectedId(optionId);
 
-    if (answer.correct) {
-      setFeedback("Betul! Bagus.");
+    setAnswers(
+      nextAnswers
+    );
 
-      const result = mechanic.complete(
-        context,
-        nextAnswers
+    setSelectedId(
+      optionId
+    );
+
+
+    if (
+      answer.correct
+    ) {
+      setFeedback(
+        "Betul! Bagus."
       );
+
+
+      const result =
+        mechanic.complete(
+          context,
+          nextAnswers
+        );
+
 
       await completeLocalSession(
         sessionId,
         result
       );
 
-      setRecoverySession(null);
 
-      if (network.online) {
-        await processPendingSessions(
-          localSyncProvider
-        );
+      setRecoverySession(
+        null
+      );
+
+
+      if (
+        network.online
+      ) {
+        const syncResult =
+          await processPendingSessions(
+            localSyncProvider
+          );
+
+
+        if (
+          syncResult.attempted >
+          0
+        ) {
+          setSyncMessage(
+            `${syncResult.succeeded} aktiviti diselaraskan`
+          );
+        }
       }
     } else {
-      setFeedback("Cuba lagi.");
+      setFeedback(
+        "Cuba lagi."
+      );
     }
   }
 
+
   function resumePreviousSession() {
-    if (!recoverySession) {
+    if (
+      !recoverySession
+    ) {
       return;
     }
 
-    setSessionId(recoverySession.id);
-    setAnswers(recoverySession.answers);
-    setSessionInitialised(true);
-    setRecoverySession(null);
+
+    setSessionId(
+      recoverySession.id
+    );
+
+    setAnswers(
+      recoverySession.answers
+    );
+
+    setSessionInitialised(
+      true
+    );
+
+    setRecoverySession(
+      null
+    );
+
 
     const lastAnswer =
-      recoverySession.answers.at(-1);
+      recoverySession
+        .answers
+        .at(-1);
 
-    if (lastAnswer) {
+
+    if (
+      lastAnswer
+    ) {
       setSelectedId(
         lastAnswer.optionId
       );
+
 
       setFeedback(
         lastAnswer.correct
@@ -173,14 +419,31 @@ export function ActivityPlayer() {
     }
   }
 
+
   function startNewSession() {
-    setRecoverySession(null);
-    setSessionId(createSessionId());
+    setRecoverySession(
+      null
+    );
+
+    setSessionId(
+      createSessionId()
+    );
+
     setAnswers([]);
-    setSelectedId(null);
-    setFeedback(null);
-    setSessionInitialised(false);
+
+    setSelectedId(
+      null
+    );
+
+    setFeedback(
+      null
+    );
+
+    setSessionInitialised(
+      false
+    );
   }
+
 
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col px-4 py-6 sm:px-6 sm:py-10">
@@ -197,18 +460,24 @@ export function ActivityPlayer() {
           Membina Akal. Menyemai Budi.
         </p>
 
+
         {!network.online && (
           <div className="mt-3 inline-flex rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-800">
             Mod luar talian
           </div>
         )}
 
-        {syncMessage && network.online && (
-          <div className="mt-3 inline-flex rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-800">
-            {syncMessage}
-          </div>
-        )}
+
+        {syncMessage &&
+          network.online && (
+            <div className="mt-3 inline-flex rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-800">
+              {
+                syncMessage
+              }
+            </div>
+          )}
       </header>
+
 
       {recoverySession && (
         <section className="mb-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -220,18 +489,24 @@ export function ActivityPlayer() {
             Sambung dari tempat terakhir atau mula semula.
           </p>
 
+
           <div className="mt-4 flex flex-col gap-3 sm:flex-row">
             <button
               type="button"
-              onClick={resumePreviousSession}
+              onClick={
+                resumePreviousSession
+              }
               className="rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white"
             >
               Sambung
             </button>
 
+
             <button
               type="button"
-              onClick={startNewSession}
+              onClick={
+                startNewSession
+              }
               className="rounded-2xl border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-700"
             >
               Mula semula
@@ -240,70 +515,118 @@ export function ActivityPlayer() {
         </section>
       )}
 
+
       <section className="rounded-[2rem] bg-white p-5 shadow-sm sm:p-8">
         <div className="mb-7 text-center">
           <p className="text-sm font-semibold text-amber-700">
-            Aktiviti pertama
+            {
+              catalogue
+                .blueprint
+                .titleMs
+            }
           </p>
+
 
           <h2 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">
-            {activity.title.ms}
+            {
+              activity
+                .title
+                .ms
+            }
           </h2>
 
+
           <p className="mt-3 text-lg text-slate-700 sm:text-xl">
-            {activity.instruction.ms}
+            {
+              activity
+                .instruction
+                .ms
+            }
           </p>
         </div>
 
+
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {activity.options.map((option) => {
-            const asset = getAsset(
-              option.asset
-            );
+          {
+            activity
+              .options
+              .map(
+                (
+                  option
+                ) => {
+                  const asset =
+                    getAsset(
+                      option.asset
+                    );
 
-            const isSelected =
-              selectedId === option.id;
 
-            return (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() =>
-                  void handleAnswer(
-                    option.id
-                  )
+                  const isSelected =
+                    selectedId ===
+                    option.id;
+
+
+                  return (
+                    <button
+                      key={
+                        option.id
+                      }
+                      type="button"
+                      onClick={
+                        () =>
+                          void handleAnswer(
+                            option.id
+                          )
+                      }
+                      aria-label={
+                        asset
+                          .alt
+                          .ms
+                      }
+                      className={[
+                        "flex min-h-40 touch-manipulation flex-col items-center justify-center",
+                        "rounded-3xl border-2 px-4 py-6",
+                        "transition duration-150 active:scale-95",
+                        "focus:outline-none focus:ring-4 focus:ring-amber-200",
+                        isSelected
+                          ? "border-amber-500 bg-amber-50"
+                          : "border-slate-200 bg-slate-50 hover:border-amber-300"
+                      ].join(
+                        " "
+                      )}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="text-7xl sm:text-8xl"
+                      >
+                        {
+                          asset
+                            .value
+                        }
+                      </span>
+
+
+                      <span className="mt-4 text-base font-semibold text-slate-700">
+                        {
+                          asset
+                            .alt
+                            .ms
+                        }
+                      </span>
+                    </button>
+                  );
                 }
-                aria-label={asset.alt.ms}
-                className={[
-                  "flex min-h-40 touch-manipulation flex-col items-center justify-center",
-                  "rounded-3xl border-2 px-4 py-6",
-                  "transition duration-150 active:scale-95",
-                  "focus:outline-none focus:ring-4 focus:ring-amber-200",
-                  isSelected
-                    ? "border-amber-500 bg-amber-50"
-                    : "border-slate-200 bg-slate-50 hover:border-amber-300"
-                ].join(" ")}
-              >
-                <span
-                  aria-hidden="true"
-                  className="text-7xl sm:text-8xl"
-                >
-                  {asset.value}
-                </span>
-
-                <span className="mt-4 text-base font-semibold text-slate-700">
-                  {asset.alt.ms}
-                </span>
-              </button>
-            );
-          })}
+              )
+          }
         </div>
+
 
         <div
           className="mt-7 min-h-10 text-center text-xl font-bold text-slate-800"
           aria-live="polite"
         >
-          {feedback}
+          {
+            feedback
+          }
         </div>
       </section>
     </main>
