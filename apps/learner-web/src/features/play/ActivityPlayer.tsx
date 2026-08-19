@@ -20,7 +20,7 @@ import {
 import { useNetworkStatus } from "../../hooks/useNetworkStatus";
 import { localSyncProvider } from "../../services/localSyncProvider";
 
-function createSessionId() {
+function createSessionId(): string {
   return crypto.randomUUID();
 }
 
@@ -38,7 +38,7 @@ export function ActivityPlayer() {
   );
 
   const [sessionId, setSessionId] =
-    useState(createSessionId);
+    useState<string>(() => createSessionId());
 
   const [answers, setAnswers] = useState<
     ReturnType<typeof mechanic.submitAnswer>[]
@@ -152,14 +152,8 @@ export function ActivityPlayer() {
       return;
     }
 
-    setSessionId(
-      recoverySession.id
-    );
-
-    setAnswers(
-      recoverySession.answers
-    );
-
+    setSessionId(recoverySession.id);
+    setAnswers(recoverySession.answers);
     setSessionInitialised(true);
     setRecoverySession(null);
 

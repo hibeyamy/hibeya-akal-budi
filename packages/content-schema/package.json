@@ -5,14 +5,14 @@
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
+  "dependencies": {
+    "zod": "^4.0.0"
+  },
   "scripts": {
     "build": "echo \"build pending\"",
     "lint": "echo \"lint pending\"",
     "typecheck": "tsc --noEmit",
-    "test": "echo \"tests pending\"",
+    "test": "vitest run",
     "clean": "echo \"clean pending\""
-  },
-  "dependencies": {
-    "zod": "^4.4.3"
   }
 }

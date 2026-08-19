@@ -13,10 +13,13 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
+    "test:run": "turbo run test -- --run",
     "clean": "turbo run clean"
   },
   "devDependencies": {
+    "fake-indexeddb": "^6.2.5",
     "turbo": "^2.5.0",
-    "typescript": "^7.0.2"
+    "typescript": "~6.0.2",
+    "vitest": "^4.0.0"
   }
 }
