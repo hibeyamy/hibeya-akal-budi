@@ -13,7 +13,8 @@ export type {
 
 export type {
   SessionSyncProvider,
-  SessionSyncResult
+  SessionSyncResult,
+  SyncQueueResult
 } from "./sync";
 
 export {
@@ -23,10 +24,15 @@ export {
   getLocalSession,
   getPendingSessions,
   getLatestIncompleteSession,
-  markSessionSynced
+  markSessionSynced,
+  markSessionFailed
 } from "./session.repository";
 
 export {
   getNetworkStatus,
   subscribeToNetworkStatus
 } from "./network";
+
+export {
+  processPendingSessions
+} from "./sync";

@@ -24,24 +24,16 @@ export async function createLocalSession(
 
   const session: StoredSession = {
     id: input.id,
-
     activityId: input.activityId,
     activityVersion: input.activityVersion,
-
     startedAt: input.startedAt,
-
     answers: [],
-
     syncStatus: "pending",
-
     createdAt: now,
     updatedAt: now
   };
 
-  await database.put(
-    "sessions",
-    session
-  );
+  await database.put("sessions", session);
 
   return session;
 }
@@ -67,10 +59,7 @@ export async function addLocalAnswer(
   session.updatedAt = Date.now();
   session.syncStatus = "pending";
 
-  await database.put(
-    "sessions",
-    session
-  );
+  await database.put("sessions", session);
 }
 
 export async function completeLocalSession(
@@ -95,10 +84,7 @@ export async function completeLocalSession(
   session.updatedAt = Date.now();
   session.syncStatus = "pending";
 
-  await database.put(
-    "sessions",
-    session
-  );
+  await database.put("sessions", session);
 }
 
 export async function getLocalSession(
@@ -123,6 +109,25 @@ export async function getPendingSessions():
   );
 }
 
+export async function getLatestIncompleteSession():
+  Promise<StoredSession | undefined> {
+  const database = await getDatabase();
+
+  const sessions = await database.getAllFromIndex(
+    "sessions",
+    "by-updated-at"
+  );
+
+  const incomplete = sessions
+    .filter((session) => !session.completedAt)
+    .sort(
+      (a, b) =>
+        b.updatedAt - a.updatedAt
+    );
+
+  return incomplete[0];
+}
+
 export async function markSessionSynced(
   sessionId: string
 ): Promise<void> {
@@ -145,21 +150,26 @@ export async function markSessionSynced(
     session
   );
 }
-export async function getLatestIncompleteSession():
-  Promise<StoredSession | undefined> {
+
+export async function markSessionFailed(
+  sessionId: string
+): Promise<void> {
   const database = await getDatabase();
 
-  const sessions = await database.getAllFromIndex(
+  const session = await database.get(
     "sessions",
-    "by-updated-at"
+    sessionId
   );
 
-  const incomplete = sessions
-    .filter((session) => !session.completedAt)
-    .sort(
-      (a, b) =>
-        b.updatedAt - a.updatedAt
-    );
+  if (!session) {
+    return;
+  }
 
-  return incomplete[0];
+  session.syncStatus = "failed";
+  session.updatedAt = Date.now();
+
+  await database.put(
+    "sessions",
+    session
+  );
 }

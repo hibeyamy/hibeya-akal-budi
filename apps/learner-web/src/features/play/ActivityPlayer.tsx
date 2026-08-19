@@ -12,10 +12,13 @@ import {
   addLocalAnswer,
   completeLocalSession,
   createLocalSession,
-  getLatestIncompleteSession
+  getLatestIncompleteSession,
+  processPendingSessions,
+  type StoredSession
 } from "@akal-budi/offline";
 
 import { useNetworkStatus } from "../../hooks/useNetworkStatus";
+import { localSyncProvider } from "../../services/localSyncProvider";
 
 function createSessionId() {
   return crypto.randomUUID();
@@ -34,9 +37,8 @@ export function ActivityPlayer() {
     mechanic.start(activity)
   );
 
-  const [sessionId] = useState(
-    createSessionId
-  );
+  const [sessionId, setSessionId] =
+    useState(createSessionId);
 
   const [answers, setAnswers] = useState<
     ReturnType<typeof mechanic.submitAnswer>[]
@@ -51,15 +53,36 @@ export function ActivityPlayer() {
   const [sessionInitialised, setSessionInitialised] =
     useState(false);
 
-  const [recoveryAvailable, setRecoveryAvailable] =
-    useState(false);
+  const [recoverySession, setRecoverySession] =
+    useState<StoredSession | null>(null);
+
+  const [syncMessage, setSyncMessage] =
+    useState<string | null>(null);
 
   useEffect(() => {
     void getLatestIncompleteSession()
       .then((session) => {
-        setRecoveryAvailable(Boolean(session));
+        if (session) {
+          setRecoverySession(session);
+        }
       });
   }, []);
+
+  useEffect(() => {
+    if (!network.online) {
+      return;
+    }
+
+    void processPendingSessions(
+      localSyncProvider
+    ).then((result) => {
+      if (result.attempted > 0) {
+        setSyncMessage(
+          `${result.succeeded} aktiviti diselaraskan`
+        );
+      }
+    });
+  }, [network.online]);
 
   async function ensureSession() {
     if (sessionInitialised) {
@@ -112,10 +135,57 @@ export function ActivityPlayer() {
         result
       );
 
-      setRecoveryAvailable(false);
+      setRecoverySession(null);
+
+      if (network.online) {
+        await processPendingSessions(
+          localSyncProvider
+        );
+      }
     } else {
       setFeedback("Cuba lagi.");
     }
+  }
+
+  function resumePreviousSession() {
+    if (!recoverySession) {
+      return;
+    }
+
+    setSessionId(
+      recoverySession.id
+    );
+
+    setAnswers(
+      recoverySession.answers
+    );
+
+    setSessionInitialised(true);
+    setRecoverySession(null);
+
+    const lastAnswer =
+      recoverySession.answers.at(-1);
+
+    if (lastAnswer) {
+      setSelectedId(
+        lastAnswer.optionId
+      );
+
+      setFeedback(
+        lastAnswer.correct
+          ? "Betul! Bagus."
+          : "Sambung semula."
+      );
+    }
+  }
+
+  function startNewSession() {
+    setRecoverySession(null);
+    setSessionId(createSessionId());
+    setAnswers([]);
+    setSelectedId(null);
+    setFeedback(null);
+    setSessionInitialised(false);
   }
 
   return (
@@ -138,12 +208,42 @@ export function ActivityPlayer() {
             Mod luar talian
           </div>
         )}
+
+        {syncMessage && network.online && (
+          <div className="mt-3 inline-flex rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-800">
+            {syncMessage}
+          </div>
+        )}
       </header>
 
-      {recoveryAvailable && (
-        <div className="mb-4 rounded-2xl bg-slate-100 px-4 py-3 text-sm font-medium text-slate-700">
-          Aktiviti sebelumnya belum selesai.
-        </div>
+      {recoverySession && (
+        <section className="mb-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="font-semibold text-slate-900">
+            Aktiviti sebelumnya belum selesai.
+          </p>
+
+          <p className="mt-1 text-sm text-slate-600">
+            Sambung dari tempat terakhir atau mula semula.
+          </p>
+
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={resumePreviousSession}
+              className="rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white"
+            >
+              Sambung
+            </button>
+
+            <button
+              type="button"
+              onClick={startNewSession}
+              className="rounded-2xl border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-700"
+            >
+              Mula semula
+            </button>
+          </div>
+        </section>
       )}
 
       <section className="rounded-[2rem] bg-white p-5 shadow-sm sm:p-8">
