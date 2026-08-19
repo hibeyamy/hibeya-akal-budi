@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useMemo,
   useState
 } from "react";
@@ -10,8 +11,11 @@ import { getGameMechanic } from "@akal-budi/game-mechanics";
 import {
   addLocalAnswer,
   completeLocalSession,
-  createLocalSession
+  createLocalSession,
+  getLatestIncompleteSession
 } from "@akal-budi/offline";
+
+import { useNetworkStatus } from "../../hooks/useNetworkStatus";
 
 function createSessionId() {
   return crypto.randomUUID();
@@ -19,6 +23,7 @@ function createSessionId() {
 
 export function ActivityPlayer() {
   const activity = warnaMerah001;
+  const network = useNetworkStatus();
 
   const mechanic = useMemo(
     () => getGameMechanic(activity.mechanic),
@@ -45,6 +50,16 @@ export function ActivityPlayer() {
 
   const [sessionInitialised, setSessionInitialised] =
     useState(false);
+
+  const [recoveryAvailable, setRecoveryAvailable] =
+    useState(false);
+
+  useEffect(() => {
+    void getLatestIncompleteSession()
+      .then((session) => {
+        setRecoveryAvailable(Boolean(session));
+      });
+  }, []);
 
   async function ensureSession() {
     if (sessionInitialised) {
@@ -96,6 +111,8 @@ export function ActivityPlayer() {
         sessionId,
         result
       );
+
+      setRecoveryAvailable(false);
     } else {
       setFeedback("Cuba lagi.");
     }
@@ -115,7 +132,19 @@ export function ActivityPlayer() {
         <p className="mt-1 text-sm text-slate-600 sm:text-base">
           Membina Akal. Menyemai Budi.
         </p>
+
+        {!network.online && (
+          <div className="mt-3 inline-flex rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-800">
+            Mod luar talian
+          </div>
+        )}
       </header>
+
+      {recoveryAvailable && (
+        <div className="mb-4 rounded-2xl bg-slate-100 px-4 py-3 text-sm font-medium text-slate-700">
+          Aktiviti sebelumnya belum selesai.
+        </div>
+      )}
 
       <section className="rounded-[2rem] bg-white p-5 shadow-sm sm:p-8">
         <div className="mb-7 text-center">
@@ -133,49 +162,47 @@ export function ActivityPlayer() {
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {activity.options.map(
-            (option) => {
-              const asset = getAsset(
-                option.asset
-              );
+          {activity.options.map((option) => {
+            const asset = getAsset(
+              option.asset
+            );
 
-              const isSelected =
-                selectedId === option.id;
+            const isSelected =
+              selectedId === option.id;
 
-              return (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() =>
-                    void handleAnswer(
-                      option.id
-                    )
-                  }
-                  aria-label={asset.alt.ms}
-                  className={[
-                    "flex min-h-40 touch-manipulation flex-col items-center justify-center",
-                    "rounded-3xl border-2 px-4 py-6",
-                    "transition duration-150 active:scale-95",
-                    "focus:outline-none focus:ring-4 focus:ring-amber-200",
-                    isSelected
-                      ? "border-amber-500 bg-amber-50"
-                      : "border-slate-200 bg-slate-50 hover:border-amber-300"
-                  ].join(" ")}
+            return (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() =>
+                  void handleAnswer(
+                    option.id
+                  )
+                }
+                aria-label={asset.alt.ms}
+                className={[
+                  "flex min-h-40 touch-manipulation flex-col items-center justify-center",
+                  "rounded-3xl border-2 px-4 py-6",
+                  "transition duration-150 active:scale-95",
+                  "focus:outline-none focus:ring-4 focus:ring-amber-200",
+                  isSelected
+                    ? "border-amber-500 bg-amber-50"
+                    : "border-slate-200 bg-slate-50 hover:border-amber-300"
+                ].join(" ")}
+              >
+                <span
+                  aria-hidden="true"
+                  className="text-7xl sm:text-8xl"
                 >
-                  <span
-                    aria-hidden="true"
-                    className="text-7xl sm:text-8xl"
-                  >
-                    {asset.value}
-                  </span>
+                  {asset.value}
+                </span>
 
-                  <span className="mt-4 text-base font-semibold text-slate-700">
-                    {asset.alt.ms}
-                  </span>
-                </button>
-              );
-            }
-          )}
+                <span className="mt-4 text-base font-semibold text-slate-700">
+                  {asset.alt.ms}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         <div

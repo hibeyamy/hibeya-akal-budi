@@ -145,3 +145,21 @@ export async function markSessionSynced(
     session
   );
 }
+export async function getLatestIncompleteSession():
+  Promise<StoredSession | undefined> {
+  const database = await getDatabase();
+
+  const sessions = await database.getAllFromIndex(
+    "sessions",
+    "by-updated-at"
+  );
+
+  const incomplete = sessions
+    .filter((session) => !session.completedAt)
+    .sort(
+      (a, b) =>
+        b.updatedAt - a.updatedAt
+    );
+
+  return incomplete[0];
+}
