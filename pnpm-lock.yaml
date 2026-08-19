@@ -44,6 +44,9 @@ importers:
       '@akal-budi/offline':
         specifier: workspace:*
         version: link:../../packages/offline
+      '@supabase/supabase-js':
+        specifier: ^2.112.3
+        version: 2.112.3
       react:
         specifier: ^19.2.8
         version: 19.2.8

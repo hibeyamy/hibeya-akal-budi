@@ -1,10 +1,12 @@
-import type { StoredSession } from "./database";
+import type {
+  StoredSession
+} from "./database";
 
 import {
   getPendingSessions,
-  markSessionFailed,
   markSessionSynced
 } from "./session.repository";
+
 
 export interface SessionSyncResult {
   sessionId: string;
@@ -12,11 +14,13 @@ export interface SessionSyncResult {
   error?: string;
 }
 
+
 export interface SessionSyncProvider {
   syncSession(
     session: StoredSession
   ): Promise<SessionSyncResult>;
 }
+
 
 export interface SyncQueueResult {
   attempted: number;
@@ -24,19 +28,26 @@ export interface SyncQueueResult {
   failed: number;
 }
 
+
 export async function processPendingSessions(
   provider: SessionSyncProvider
 ): Promise<SyncQueueResult> {
-  const sessions = await getPendingSessions();
+  const sessions =
+    await getPendingSessions();
 
   let succeeded = 0;
   let failed = 0;
 
-  for (const session of sessions) {
+
+  for (
+    const session of sessions
+  ) {
     try {
-      const result = await provider.syncSession(
-        session
-      );
+      const result =
+        await provider.syncSession(
+          session
+        );
+
 
       if (result.success) {
         await markSessionSynced(
@@ -45,24 +56,30 @@ export async function processPendingSessions(
 
         succeeded += 1;
       } else {
-        await markSessionFailed(
-          session.id
-        );
-
+        /*
+         * Keep the session pending.
+         *
+         * A failure may simply mean:
+         * - no internet
+         * - temporary Supabase outage
+         * - transient timeout
+         *
+         * Pending sessions remain retryable.
+         */
         failed += 1;
       }
     } catch {
-      await markSessionFailed(
-        session.id
-      );
-
       failed += 1;
     }
   }
 
+
   return {
-    attempted: sessions.length,
+    attempted:
+      sessions.length,
+
     succeeded,
+
     failed
   };
 }

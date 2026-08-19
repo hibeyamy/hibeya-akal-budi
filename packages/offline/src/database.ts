@@ -33,6 +33,19 @@ export interface StoredSession {
   updatedAt: number;
 }
 
+export interface LearnerDeviceIdentity {
+  id: "active-device";
+
+  deviceId: string;
+  childId: string;
+
+  deviceToken: string;
+
+  deviceName: string | null;
+
+  activatedAt: number;
+}
+
 interface AkalBudiDatabase extends DBSchema {
   sessions: {
     key: string;
@@ -44,47 +57,83 @@ interface AkalBudiDatabase extends DBSchema {
       "by-updated-at": number;
     };
   };
+
+  learnerDevice: {
+    key: "active-device";
+    value: LearnerDeviceIdentity;
+  };
 }
 
-const DATABASE_NAME = "hibeya-akal-budi";
-const DATABASE_VERSION = 1;
+const DATABASE_NAME =
+  "hibeya-akal-budi";
+
+const DATABASE_VERSION =
+  2;
 
 let databasePromise:
-  | Promise<IDBPDatabase<AkalBudiDatabase>>
+  | Promise<
+      IDBPDatabase<AkalBudiDatabase>
+    >
   | undefined;
 
 export function getDatabase() {
   if (!databasePromise) {
-    databasePromise = openDB<AkalBudiDatabase>(
-      DATABASE_NAME,
-      DATABASE_VERSION,
-      {
-        upgrade(database) {
-          const sessionStore =
-            database.createObjectStore(
-              "sessions",
-              {
-                keyPath: "id"
-              }
-            );
+    databasePromise =
+      openDB<AkalBudiDatabase>(
+        DATABASE_NAME,
+        DATABASE_VERSION,
+        {
+          upgrade(
+            database,
+            oldVersion
+          ) {
+            if (
+              oldVersion < 1
+            ) {
+              const sessionStore =
+                database
+                  .createObjectStore(
+                    "sessions",
+                    {
+                      keyPath:
+                        "id"
+                    }
+                  );
 
-          sessionStore.createIndex(
-            "by-sync-status",
-            "syncStatus"
-          );
+              sessionStore
+                .createIndex(
+                  "by-sync-status",
+                  "syncStatus"
+                );
 
-          sessionStore.createIndex(
-            "by-activity-id",
-            "activityId"
-          );
+              sessionStore
+                .createIndex(
+                  "by-activity-id",
+                  "activityId"
+                );
 
-          sessionStore.createIndex(
-            "by-updated-at",
-            "updatedAt"
-          );
+              sessionStore
+                .createIndex(
+                  "by-updated-at",
+                  "updatedAt"
+                );
+            }
+
+            if (
+              oldVersion < 2
+            ) {
+              database
+                .createObjectStore(
+                  "learnerDevice",
+                  {
+                    keyPath:
+                      "id"
+                  }
+                );
+            }
+          }
         }
-      }
-    );
+      );
   }
 
   return databasePromise;
@@ -100,7 +149,9 @@ export async function closeDatabase():
     await databasePromise;
 
   database.close();
-  databasePromise = undefined;
+
+  databasePromise =
+    undefined;
 }
 
 export async function resetDatabaseForTests():
@@ -108,11 +159,15 @@ export async function resetDatabaseForTests():
   await closeDatabase();
 
   await new Promise<void>(
-    (resolve, reject) => {
+    (
+      resolve,
+      reject
+    ) => {
       const request =
-        indexedDB.deleteDatabase(
-          DATABASE_NAME
-        );
+        indexedDB
+          .deleteDatabase(
+            DATABASE_NAME
+          );
 
       request.onsuccess =
         () => resolve();

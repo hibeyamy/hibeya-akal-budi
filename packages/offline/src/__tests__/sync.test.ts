@@ -21,12 +21,16 @@ import {
   type SessionSyncProvider
 } from "../sync";
 
+
 describe(
   "offline sync queue",
   () => {
-    beforeEach(async () => {
-      await resetDatabaseForTests();
-    });
+    beforeEach(
+      async () => {
+        await resetDatabaseForTests();
+      }
+    );
+
 
     it(
       "marks successfully synced sessions as synced",
@@ -45,6 +49,7 @@ describe(
             1000
         });
 
+
         const provider:
           SessionSyncProvider = {
             async syncSession(
@@ -60,10 +65,12 @@ describe(
             }
           };
 
+
         const result =
           await processPendingSessions(
             provider
           );
+
 
         expect(
           result.attempted
@@ -77,10 +84,12 @@ describe(
           result.failed
         ).toBe(0);
 
+
         const session =
           await getLocalSession(
             "sync-success"
           );
+
 
         expect(
           session?.syncStatus
@@ -90,8 +99,9 @@ describe(
       }
     );
 
+
     it(
-      "marks failed sessions as failed",
+      "keeps failed sessions pending for retry",
       async () => {
         await createLocalSession({
           id:
@@ -107,6 +117,7 @@ describe(
             1000
         });
 
+
         const provider:
           SessionSyncProvider = {
             async syncSession(
@@ -120,15 +131,17 @@ describe(
                   false,
 
                 error:
-                  "Simulated failure"
+                  "Temporary failure"
               };
             }
           };
+
 
         const result =
           await processPendingSessions(
             provider
           );
+
 
         expect(
           result.attempted
@@ -142,21 +155,24 @@ describe(
           result.failed
         ).toBe(1);
 
+
         const session =
           await getLocalSession(
             "sync-failed"
           );
 
+
         expect(
           session?.syncStatus
         ).toBe(
-          "failed"
+          "pending"
         );
       }
     );
 
+
     it(
-      "handles provider exceptions without crashing the queue",
+      "keeps sessions pending when provider throws",
       async () => {
         await createLocalSession({
           id:
@@ -172,6 +188,7 @@ describe(
             1000
         });
 
+
         const provider:
           SessionSyncProvider = {
             async syncSession() {
@@ -181,32 +198,28 @@ describe(
             }
           };
 
+
         const result =
           await processPendingSessions(
             provider
           );
 
-        expect(
-          result.attempted
-        ).toBe(1);
-
-        expect(
-          result.succeeded
-        ).toBe(0);
 
         expect(
           result.failed
         ).toBe(1);
+
 
         const session =
           await getLocalSession(
             "sync-exception"
           );
 
+
         expect(
           session?.syncStatus
         ).toBe(
-          "failed"
+          "pending"
         );
       }
     );

@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useMemo,
   useState
 } from "react";
 
@@ -19,6 +20,14 @@ import {
   type ConsentState,
   type PrivacyNotice
 } from "./services/consentService";
+
+import {
+  createActivationCode,
+  getLearnerDevices,
+  revokeLearnerDevice,
+  type ActivationCode,
+  type LearnerDevice
+} from "./services/deviceActivationService";
 
 import {
   getErrorMessage
@@ -104,6 +113,27 @@ function App() {
     useState("ms");
 
 
+  const [
+    devices,
+    setDevices
+  ] =
+    useState<LearnerDevice[]>([]);
+
+  const [
+    selectedChildId,
+    setSelectedChildId
+  ] =
+    useState("");
+
+  const [
+    activation,
+    setActivation
+  ] =
+    useState<ActivationCode | null>(
+      null
+    );
+
+
   useEffect(() => {
     void supabase.auth
       .getSession()
@@ -150,14 +180,65 @@ function App() {
   useEffect(() => {
     if (!user) {
       setChildren([]);
+      setDevices([]);
       setConsentState(null);
       setPrivacyNotice(null);
+      setSelectedChildId("");
+      setActivation(null);
 
       return;
     }
 
     void loadParentData();
   }, [user]);
+
+
+  useEffect(() => {
+    if (
+      children.length > 0 &&
+      !selectedChildId
+    ) {
+      setSelectedChildId(
+        children[0].id
+      );
+    }
+  }, [
+    children,
+    selectedChildId
+  ]);
+
+
+  const devicesByChild =
+    useMemo(
+      () => {
+        const map =
+          new Map<
+            string,
+            LearnerDevice[]
+          >();
+
+        for (
+          const device of devices
+        ) {
+          const current =
+            map.get(
+              device.childId
+            ) ?? [];
+
+          current.push(
+            device
+          );
+
+          map.set(
+            device.childId,
+            current
+          );
+        }
+
+        return map;
+      },
+      [devices]
+    );
 
 
   async function loadParentData() {
@@ -202,9 +283,13 @@ function App() {
         consent
           .essentialProcessingAccepted
       ) {
-        await loadChildren();
+        await Promise.all([
+          loadChildren(),
+          loadDevices()
+        ]);
       } else {
         setChildren([]);
+        setDevices([]);
       }
     } catch (error) {
       setMessage(
@@ -239,6 +324,16 @@ function App() {
 
     setChildren(
       data ?? []
+    );
+  }
+
+
+  async function loadDevices() {
+    const result =
+      await getLearnerDevices();
+
+    setDevices(
+      result
     );
   }
 
@@ -375,7 +470,8 @@ function App() {
     }
 
     if (
-      nickname.trim().length === 0
+      nickname.trim()
+        .length === 0
     ) {
       setMessage(
         "Masukkan nama panggilan."
@@ -417,6 +513,64 @@ function App() {
 
       setMessage(
         "Profil anak berjaya dicipta."
+      );
+    } catch (error) {
+      setMessage(
+        getErrorMessage(error)
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+
+  async function generateActivation() {
+    if (!selectedChildId) {
+      setMessage(
+        "Pilih profil anak terlebih dahulu."
+      );
+
+      return;
+    }
+
+    setBusy(true);
+    setMessage(null);
+    setActivation(null);
+
+    try {
+      const result =
+        await createActivationCode(
+          selectedChildId
+        );
+
+      setActivation(
+        result
+      );
+    } catch (error) {
+      setMessage(
+        getErrorMessage(error)
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+
+  async function revokeDevice(
+    deviceId: string
+  ) {
+    setBusy(true);
+    setMessage(null);
+
+    try {
+      await revokeLearnerDevice(
+        deviceId
+      );
+
+      await loadDevices();
+
+      setMessage(
+        "Peranti berjaya dinyahaktifkan."
       );
     } catch (error) {
       setMessage(
@@ -639,7 +793,7 @@ function App() {
 
 
   return (
-    <main className="mx-auto min-h-screen max-w-3xl px-5 py-10">
+    <main className="mx-auto min-h-screen max-w-4xl px-5 py-10">
       <ParentHeader
         email={user?.email}
         onSignOut={
@@ -653,7 +807,7 @@ function App() {
           Tambah Profil Anak
         </h2>
 
-        <p className="mt-1 text-sm text-slate-600">
+        <p className="mt-1 text-sm leading-6 text-slate-600">
           Gunakan nama panggilan sahaja.
           Jangan masukkan nama penuh, nombor MyKid,
           sekolah atau maklumat pengenalan lain.
@@ -748,6 +902,7 @@ function App() {
         />
       </section>
 
+
       <section className="mt-6 rounded-3xl bg-white p-6 shadow-sm">
         <h2 className="text-xl font-bold text-slate-900">
           Profil Anak
@@ -787,8 +942,233 @@ function App() {
                         : "English"
                     }
                   </p>
+
+                  <p className="mt-2 text-xs text-slate-500">
+                    Peranti aktif:{" "}
+                    {
+                      (
+                        devicesByChild
+                          .get(
+                            child.id
+                          ) ?? []
+                      ).filter(
+                        (device) =>
+                          !device.revokedAt
+                      ).length
+                    }
+                  </p>
                 </article>
               )
+            )}
+          </div>
+        )}
+      </section>
+
+
+      <section className="mt-6 rounded-3xl bg-white p-6 shadow-sm">
+        <p className="text-sm font-bold uppercase tracking-[0.15em] text-amber-700">
+          Learner Mode
+        </p>
+
+        <h2 className="mt-2 text-xl font-bold text-slate-900">
+          Aktifkan Peranti
+        </h2>
+
+        <p className="mt-2 text-sm leading-6 text-slate-600">
+          Pilih profil anak dan jana kod 6 digit.
+          Masukkan kod tersebut pada peranti yang akan digunakan oleh anak.
+        </p>
+
+        {children.length === 0 ? (
+          <p className="mt-5 rounded-2xl bg-slate-100 px-4 py-3 text-sm text-slate-700">
+            Cipta sekurang-kurangnya satu profil anak terlebih dahulu.
+          </p>
+        ) : (
+          <>
+            <label className="mt-5 block text-sm font-semibold text-slate-700">
+              Profil anak
+            </label>
+
+            <select
+              value={
+                selectedChildId
+              }
+              onChange={
+                (event) => {
+                  setSelectedChildId(
+                    event.target.value
+                  );
+
+                  setActivation(
+                    null
+                  );
+                }
+              }
+              className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3"
+            >
+              {children.map(
+                (child) => (
+                  <option
+                    key={
+                      child.id
+                    }
+                    value={
+                      child.id
+                    }
+                  >
+                    {
+                      child.nickname
+                    }
+                  </option>
+                )
+              )}
+            </select>
+
+            <button
+              type="button"
+              disabled={
+                busy ||
+                !selectedChildId
+              }
+              onClick={
+                () =>
+                  void generateActivation()
+              }
+              className="mt-5 rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white disabled:opacity-50"
+            >
+              Jana Kod Pengaktifan
+            </button>
+          </>
+        )}
+
+        {activation && (
+          <div className="mt-6 rounded-3xl border-2 border-amber-200 bg-amber-50 p-6 text-center">
+            <p className="text-sm font-semibold text-amber-800">
+              Kod Pengaktifan
+            </p>
+
+            <p className="mt-3 text-5xl font-black tracking-[0.3em] text-slate-900">
+              {
+                activation.code
+              }
+            </p>
+
+            <p className="mt-4 text-sm text-slate-600">
+              Sah sehingga{" "}
+              {
+                new Date(
+                  activation.expiresAt
+                ).toLocaleTimeString(
+                  "ms-MY",
+                  {
+                    hour:
+                      "2-digit",
+                    minute:
+                      "2-digit"
+                  }
+                )
+              }
+            </p>
+
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              Kod ini hanya boleh digunakan sekali dan akan luput secara automatik.
+            </p>
+          </div>
+        )}
+      </section>
+
+
+      <section className="mt-6 rounded-3xl bg-white p-6 shadow-sm">
+        <h2 className="text-xl font-bold text-slate-900">
+          Peranti Keluarga
+        </h2>
+
+        <p className="mt-2 text-sm leading-6 text-slate-600">
+          Peranti yang telah diaktifkan untuk Learner Mode.
+        </p>
+
+        {devices.length === 0 ? (
+          <p className="mt-4 text-slate-600">
+            Belum ada peranti yang diaktifkan.
+          </p>
+        ) : (
+          <div className="mt-5 space-y-4">
+            {devices.map(
+              (device) => {
+                const child =
+                  children.find(
+                    (item) =>
+                      item.id ===
+                      device.childId
+                  );
+
+                const revoked =
+                  Boolean(
+                    device.revokedAt
+                  );
+
+                return (
+                  <article
+                    key={
+                      device.id
+                    }
+                    className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                  >
+                    <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                      <div>
+                        <p className="font-bold text-slate-900">
+                          {
+                            device.deviceName ??
+                            "Peranti Akal Budi"
+                          }
+                        </p>
+
+                        <p className="mt-1 text-sm text-slate-600">
+                          Profil:{" "}
+                          {
+                            child
+                              ?.nickname ??
+                            "Tidak diketahui"
+                          }
+                        </p>
+
+                        <p className="text-sm text-slate-600">
+                          Diaktifkan:{" "}
+                          {
+                            new Date(
+                              device.activatedAt
+                            ).toLocaleString(
+                              "ms-MY"
+                            )
+                          }
+                        </p>
+
+                        <p className="mt-1 text-xs font-semibold">
+                          {revoked
+                            ? "Dinyahaktifkan"
+                            : "Aktif"}
+                        </p>
+                      </div>
+
+                      {!revoked && (
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={
+                            () =>
+                              void revokeDevice(
+                                device.id
+                              )
+                          }
+                          className="rounded-2xl border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-700 disabled:opacity-50"
+                        >
+                          Nyahaktifkan
+                        </button>
+                      )}
+                    </div>
+                  </article>
+                );
+              }
             )}
           </div>
         )}
@@ -800,10 +1180,14 @@ function App() {
 
 interface ConsentCheckboxProps {
   checked: boolean;
+
   onChange:
     (value: boolean) => void;
+
   title: string;
+
   description: string;
+
   optional?: boolean;
 }
 
@@ -819,7 +1203,9 @@ function ConsentCheckbox({
     <label className="mt-5 flex cursor-pointer gap-4 rounded-2xl border border-slate-200 p-4">
       <input
         type="checkbox"
-        checked={checked}
+        checked={
+          checked
+        }
         onChange={
           (event) =>
             onChange(
@@ -841,7 +1227,9 @@ function ConsentCheckbox({
         </span>
 
         <span className="mt-1 block text-sm leading-6 text-slate-600">
-          {description}
+          {
+            description
+          }
         </span>
       </span>
     </label>

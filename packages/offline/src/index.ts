@@ -1,11 +1,16 @@
 export type {
   StoredSession,
-  SyncStatus
+  SyncStatus,
+  LearnerDeviceIdentity
 } from "./database";
 
 export type {
   CreateLocalSessionInput
 } from "./session.repository";
+
+export type {
+  SaveLearnerDeviceInput
+} from "./learner-device.repository";
 
 export type {
   NetworkStatus
@@ -27,6 +32,12 @@ export {
   markSessionSynced,
   markSessionFailed
 } from "./session.repository";
+
+export {
+  saveLearnerDevice,
+  getLearnerDevice,
+  clearLearnerDevice
+} from "./learner-device.repository";
 
 export {
   getNetworkStatus,
