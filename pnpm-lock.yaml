@@ -100,6 +100,10 @@ importers:
       '@akal-budi/game-runtime':
         specifier: workspace:*
         version: link:../game-runtime
+    devDependencies:
+      '@akal-budi/test-fixtures':
+        specifier: workspace:*
+        version: link:../test-fixtures
 
   packages/game-runtime:
     dependencies:
@@ -109,6 +113,10 @@ importers:
       '@akal-budi/domain':
         specifier: workspace:*
         version: link:../domain
+    devDependencies:
+      '@akal-budi/test-fixtures':
+        specifier: workspace:*
+        version: link:../test-fixtures
 
   packages/offline:
     dependencies:
@@ -118,6 +126,12 @@ importers:
       idb:
         specifier: ^8.0.0
         version: 8.0.3
+
+  packages/test-fixtures:
+    dependencies:
+      '@akal-budi/content-schema':
+        specifier: workspace:*
+        version: link:../content-schema
 
 packages:
 

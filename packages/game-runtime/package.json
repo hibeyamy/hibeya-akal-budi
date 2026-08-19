@@ -9,6 +9,9 @@
     "@akal-budi/domain": "workspace:*",
     "@akal-budi/content-schema": "workspace:*"
   },
+  "devDependencies": {
+    "@akal-budi/test-fixtures": "workspace:*"
+  },
   "scripts": {
     "build": "echo \"build pending\"",
     "lint": "echo \"lint pending\"",

@@ -60,12 +60,13 @@ export function getDatabase() {
       DATABASE_VERSION,
       {
         upgrade(database) {
-          const sessionStore = database.createObjectStore(
-            "sessions",
-            {
-              keyPath: "id"
-            }
-          );
+          const sessionStore =
+            database.createObjectStore(
+              "sessions",
+              {
+                keyPath: "id"
+              }
+            );
 
           sessionStore.createIndex(
             "by-sync-status",
@@ -87,4 +88,51 @@ export function getDatabase() {
   }
 
   return databasePromise;
+}
+
+export async function closeDatabase():
+  Promise<void> {
+  if (!databasePromise) {
+    return;
+  }
+
+  const database =
+    await databasePromise;
+
+  database.close();
+  databasePromise = undefined;
+}
+
+export async function resetDatabaseForTests():
+  Promise<void> {
+  await closeDatabase();
+
+  await new Promise<void>(
+    (resolve, reject) => {
+      const request =
+        indexedDB.deleteDatabase(
+          DATABASE_NAME
+        );
+
+      request.onsuccess =
+        () => resolve();
+
+      request.onerror =
+        () =>
+          reject(
+            request.error ??
+              new Error(
+                "Failed to delete test database."
+              )
+          );
+
+      request.onblocked =
+        () =>
+          reject(
+            new Error(
+              "Test database deletion was blocked by an open connection."
+            )
+          );
+    }
+  );
 }

@@ -8,6 +8,10 @@ import {
 } from "vitest";
 
 import {
+  resetDatabaseForTests
+} from "../database";
+
+import {
   addLocalAnswer,
   completeLocalSession,
   createLocalSession,
@@ -17,170 +21,264 @@ import {
   markSessionSynced
 } from "../session.repository";
 
-describe("offline session repository", () => {
-  beforeEach(async () => {
-    await new Promise<void>((resolve, reject) => {
-      const request = indexedDB.deleteDatabase(
-        "hibeya-akal-budi"
-      );
-
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-      request.onblocked = () => resolve();
-    });
-  });
-
-  it("creates and retrieves a local session", async () => {
-    await createLocalSession({
-      id: "session-1",
-      activityId: "warna-merah-001",
-      activityVersion: 1,
-      startedAt: 1000
+describe(
+  "offline session repository",
+  () => {
+    beforeEach(async () => {
+      await resetDatabaseForTests();
     });
 
-    const session =
-      await getLocalSession("session-1");
+    it(
+      "creates and retrieves a local session",
+      async () => {
+        await createLocalSession({
+          id: "session-1",
+          activityId:
+            "warna-merah-001",
+          activityVersion: 1,
+          startedAt: 1000
+        });
 
-    expect(session).toBeDefined();
-    expect(session?.activityId)
-      .toBe("warna-merah-001");
-    expect(session?.syncStatus)
-      .toBe("pending");
-    expect(session?.answers)
-      .toEqual([]);
-  });
+        const session =
+          await getLocalSession(
+            "session-1"
+          );
 
-  it("stores answers in a session", async () => {
-    await createLocalSession({
-      id: "session-2",
-      activityId: "warna-merah-001",
-      activityVersion: 1,
-      startedAt: 1000
-    });
+        expect(session)
+          .toBeDefined();
 
-    await addLocalAnswer(
-      "session-2",
-      {
-        optionId: "apple-green",
-        correct: false,
-        answeredAt: 2000
+        expect(
+          session?.activityId
+        ).toBe(
+          "warna-merah-001"
+        );
+
+        expect(
+          session?.syncStatus
+        ).toBe(
+          "pending"
+        );
+
+        expect(
+          session?.answers
+        ).toEqual([]);
       }
     );
 
-    const session =
-      await getLocalSession("session-2");
+    it(
+      "stores answers in a session",
+      async () => {
+        await createLocalSession({
+          id: "session-2",
+          activityId:
+            "warna-merah-001",
+          activityVersion: 1,
+          startedAt: 1000
+        });
 
-    expect(session?.answers)
-      .toHaveLength(1);
+        await addLocalAnswer(
+          "session-2",
+          {
+            optionId:
+              "apple-green",
 
-    expect(session?.answers[0]?.correct)
-      .toBe(false);
-  });
+            correct:
+              false,
 
-  it("returns the latest incomplete session", async () => {
-    await createLocalSession({
-      id: "session-old",
-      activityId: "warna-merah-001",
-      activityVersion: 1,
-      startedAt: 1000
-    });
+            answeredAt:
+              2000
+          }
+        );
 
-    await new Promise((resolve) =>
-      setTimeout(resolve, 5)
-    );
+        const session =
+          await getLocalSession(
+            "session-2"
+          );
 
-    await createLocalSession({
-      id: "session-new",
-      activityId: "warna-merah-001",
-      activityVersion: 1,
-      startedAt: 2000
-    });
+        expect(
+          session?.answers
+        ).toHaveLength(1);
 
-    const latest =
-      await getLatestIncompleteSession();
-
-    expect(latest?.id)
-      .toBe("session-new");
-  });
-
-  it("stores a completed result", async () => {
-    await createLocalSession({
-      id: "session-3",
-      activityId: "warna-merah-001",
-      activityVersion: 1,
-      startedAt: 1000
-    });
-
-    await completeLocalSession(
-      "session-3",
-      {
-        activityId: "warna-merah-001",
-        activityVersion: 1,
-        correct: 1,
-        incorrect: 0,
-        attempts: 1,
-        durationSeconds: 5,
-        completedAt: 6000
+        expect(
+          session?.answers[0]
+            ?.correct
+        ).toBe(false);
       }
     );
 
-    const session =
-      await getLocalSession("session-3");
+    it(
+      "returns the latest incomplete session",
+      async () => {
+        await createLocalSession({
+          id: "session-old",
+          activityId:
+            "warna-merah-001",
+          activityVersion: 1,
+          startedAt: 1000
+        });
 
-    expect(session?.completedAt)
-      .toBe(6000);
+        await new Promise(
+          (resolve) =>
+            setTimeout(
+              resolve,
+              5
+            )
+        );
 
-    expect(session?.result?.correct)
-      .toBe(1);
-  });
+        await createLocalSession({
+          id: "session-new",
+          activityId:
+            "warna-merah-001",
+          activityVersion: 1,
+          startedAt: 2000
+        });
 
-  it("marks a session as synced", async () => {
-    await createLocalSession({
-      id: "session-4",
-      activityId: "warna-merah-001",
-      activityVersion: 1,
-      startedAt: 1000
-    });
+        const latest =
+          await getLatestIncompleteSession();
 
-    await markSessionSynced(
-      "session-4"
+        expect(
+          latest?.id
+        ).toBe(
+          "session-new"
+        );
+      }
     );
 
-    const session =
-      await getLocalSession("session-4");
+    it(
+      "stores a completed result",
+      async () => {
+        await createLocalSession({
+          id: "session-3",
+          activityId:
+            "warna-merah-001",
+          activityVersion: 1,
+          startedAt: 1000
+        });
 
-    expect(session?.syncStatus)
-      .toBe("synced");
-  });
+        await completeLocalSession(
+          "session-3",
+          {
+            activityId:
+              "warna-merah-001",
 
-  it("returns only pending sessions", async () => {
-    await createLocalSession({
-      id: "session-pending",
-      activityId: "warna-merah-001",
-      activityVersion: 1,
-      startedAt: 1000
-    });
+            activityVersion:
+              1,
 
-    await createLocalSession({
-      id: "session-synced",
-      activityId: "warna-merah-001",
-      activityVersion: 1,
-      startedAt: 1000
-    });
+            correct:
+              1,
 
-    await markSessionSynced(
-      "session-synced"
+            incorrect:
+              0,
+
+            attempts:
+              1,
+
+            durationSeconds:
+              5,
+
+            completedAt:
+              6000
+          }
+        );
+
+        const session =
+          await getLocalSession(
+            "session-3"
+          );
+
+        expect(
+          session?.completedAt
+        ).toBe(6000);
+
+        expect(
+          session?.result
+            ?.correct
+        ).toBe(1);
+      }
     );
 
-    const pending =
-      await getPendingSessions();
+    it(
+      "marks a session as synced",
+      async () => {
+        await createLocalSession({
+          id: "session-4",
+          activityId:
+            "warna-merah-001",
+          activityVersion: 1,
+          startedAt: 1000
+        });
 
-    expect(
-      pending.map((session) => session.id)
-    ).toContain("session-pending");
+        await markSessionSynced(
+          "session-4"
+        );
 
-    expect(
-      pending.map((session) => session.id)
-    ).not.toContain("session-synced");
-  });
-});
+        const session =
+          await getLocalSession(
+            "session-4"
+          );
+
+        expect(
+          session?.syncStatus
+        ).toBe(
+          "synced"
+        );
+      }
+    );
+
+    it(
+      "returns only pending sessions",
+      async () => {
+        await createLocalSession({
+          id:
+            "session-pending",
+
+          activityId:
+            "warna-merah-001",
+
+          activityVersion:
+            1,
+
+          startedAt:
+            1000
+        });
+
+        await createLocalSession({
+          id:
+            "session-synced",
+
+          activityId:
+            "warna-merah-001",
+
+          activityVersion:
+            1,
+
+          startedAt:
+            1000
+        });
+
+        await markSessionSynced(
+          "session-synced"
+        );
+
+        const pending =
+          await getPendingSessions();
+
+        const ids =
+          pending.map(
+            (session) =>
+              session.id
+          );
+
+        expect(ids)
+          .toContain(
+            "session-pending"
+          );
+
+        expect(ids)
+          .not.toContain(
+            "session-synced"
+          );
+      }
+    );
+  }
+);

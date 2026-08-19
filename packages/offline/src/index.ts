@@ -36,3 +36,8 @@ export {
 export {
   processPendingSessions
 } from "./sync";
+
+export {
+  closeDatabase,
+  resetDatabaseForTests
+} from "./database";

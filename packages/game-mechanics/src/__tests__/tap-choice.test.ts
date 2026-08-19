@@ -4,59 +4,39 @@ import {
   it
 } from "vitest";
 
-import type {
-  ActivityContent
-} from "@akal-budi/content-schema";
+import {
+  governedActivityFixture
+} from "@akal-budi/test-fixtures";
 
 import {
   TapChoiceMechanic
 } from "../tap-choice";
 
-const activity: ActivityContent = {
-  id: "warna-merah-001",
-  version: 1,
-  mechanic: "tap-choice",
-  ageBand: "3-4",
-  domains: ["logic"],
-  skills: ["colour-recognition"],
-  difficulty: 1,
-
-  title: {
-    ms: "Cari Warna Merah",
-    en: "Find the Red Colour"
-  },
-
-  instruction: {
-    ms: "Cari buah yang berwarna merah",
-    en: "Find the fruit that is red"
-  },
-
-  options: [
-    {
-      id: "apple-red",
-      asset: "apple-red",
-      correct: true
-    },
-    {
-      id: "apple-green",
-      asset: "apple-green",
-      correct: false
-    }
-  ],
-
-  metadata: {
-    estimatedSeconds: 30,
-    active: true
-  }
-};
-
 describe("TapChoiceMechanic", () => {
-  it("returns correct result for the correct option", () => {
+  it("accepts a governed tap-choice activity", () => {
     const mechanic =
       new TapChoiceMechanic();
 
     const context =
-      mechanic.start(activity);
+      mechanic.start(
+        governedActivityFixture
+      );
+
+    expect(
+      context.activity.id
+    ).toBe(
+      governedActivityFixture.id
+    );
+  });
+
+  it("returns correct for the correct option", () => {
+    const mechanic =
+      new TapChoiceMechanic();
+
+    const context =
+      mechanic.start(
+        governedActivityFixture
+      );
 
     const answer =
       mechanic.submitAnswer(
@@ -68,12 +48,14 @@ describe("TapChoiceMechanic", () => {
       .toBe(true);
   });
 
-  it("returns incorrect result for a wrong option", () => {
+  it("returns incorrect for the wrong option", () => {
     const mechanic =
       new TapChoiceMechanic();
 
     const context =
-      mechanic.start(activity);
+      mechanic.start(
+        governedActivityFixture
+      );
 
     const answer =
       mechanic.submitAnswer(
@@ -90,25 +72,31 @@ describe("TapChoiceMechanic", () => {
       new TapChoiceMechanic();
 
     const context =
-      mechanic.start(activity);
+      mechanic.start(
+        governedActivityFixture
+      );
 
     expect(() =>
       mechanic.submitAnswer(
         context,
         "does-not-exist"
       )
-    ).toThrow("Unknown option");
+    ).toThrow(
+      "Unknown option"
+    );
   });
 
-  it("rejects the wrong mechanic type", () => {
+  it("rejects an activity intended for another mechanic", () => {
     const mechanic =
       new TapChoiceMechanic();
 
     expect(() =>
       mechanic.start({
-        ...activity,
+        ...governedActivityFixture,
         mechanic: "memory"
       })
-    ).toThrow();
+    ).toThrow(
+      "TapChoiceMechanic cannot run activity mechanic"
+    );
   });
 });

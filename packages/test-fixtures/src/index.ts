@@ -1,12 +1,11 @@
-import {
-  ActivitySchema,
-  type ActivityContent
+import type {
+  ActivityContent
 } from "@akal-budi/content-schema";
 
-const activity = {
-  id: "warna-merah-001",
+export const governedActivityFixture: ActivityContent = {
+  id: "warna-merah-test-001",
 
-  version: 2,
+  version: 1,
 
   mechanic: "tap-choice",
 
@@ -43,11 +42,6 @@ const activity = {
       id: "apple-green",
       asset: "apple-green",
       correct: false
-    },
-    {
-      id: "banana-yellow",
-      asset: "banana-yellow",
-      correct: false
     }
   ],
 
@@ -58,9 +52,9 @@ const activity = {
 
     rationale: {
       ms:
-        "Aktiviti ini membantu kanak-kanak membezakan dan mengenal warna melalui pilihan visual yang mudah.",
+        "Aktiviti ujian untuk mengesahkan pengenalan warna dan diskriminasi visual.",
       en:
-        "This activity supports basic colour recognition and visual discrimination through simple visual choices."
+        "Test activity for validating colour recognition and visual discrimination."
     },
 
     interactionMode:
@@ -73,9 +67,9 @@ const activity = {
 
     offlineExtension: {
       ms:
-        "Cari tiga benda berwarna merah di sekeliling bersama orang dewasa.",
+        "Cari satu benda merah di sekeliling.",
       en:
-        "Find three red objects around you with an adult."
+        "Find one red object around you."
     },
 
     researchRefs: [
@@ -87,11 +81,14 @@ const activity = {
     sensoryLoad:
       "low",
 
-    rewardIntensity: 1,
+    rewardIntensity:
+      1,
 
-    animationIntensity: 0,
+    animationIntensity:
+      0,
 
-    audioIntensity: 0,
+    audioIntensity:
+      0,
 
     usesCountdownPressure:
       false,
@@ -147,7 +144,7 @@ const activity = {
       "original",
 
     creator:
-      "HIBEYA",
+      "HIBEYA Test Fixture",
 
     assetSourceRefs: [],
 
@@ -158,18 +155,17 @@ const activity = {
       true,
 
     reviewedBy:
-      "HIBEYA internal review",
+      "Automated test fixture",
 
     reviewedAt:
       "2026-08-20T00:00:00.000Z"
   },
 
   metadata: {
-    estimatedSeconds: 120,
-    active: true
-  }
-} satisfies ActivityContent;
+    estimatedSeconds:
+      120,
 
-export const warnaMerah001 =
-  ActivitySchema.parse(activity);
-  
+    active:
+      true
+  }
+};
