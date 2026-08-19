@@ -1,4 +1,4 @@
-import {
+﻿import {
   useEffect,
   useMemo,
   useState
@@ -32,6 +32,10 @@ import {
 import {
   getErrorMessage
 } from "./utils/errorMessage";
+
+import {
+  ProgressDashboard
+} from "./features/progress/ProgressDashboard";
 
 
 interface ChildProfile {
@@ -727,7 +731,7 @@ function App() {
                 </a>
               ) : (
                 <p className="mt-2 text-sm text-amber-800">
-                  Versi pembangunan — notis undang-undang produksi belum diterbitkan.
+                  Versi pembangunan â€” notis undang-undang produksi belum diterbitkan.
                 </p>
               )}
             </div>
@@ -844,19 +848,19 @@ function App() {
           className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3"
         >
           <option value="2-3">
-            2–3 tahun
+            2â€“3 tahun
           </option>
 
           <option value="3-4">
-            3–4 tahun
+            3â€“4 tahun
           </option>
 
           <option value="4-5">
-            4–5 tahun
+            4â€“5 tahun
           </option>
 
           <option value="5-6">
-            5–6 tahun
+            5â€“6 tahun
           </option>
         </select>
 
@@ -963,6 +967,24 @@ function App() {
           </div>
         )}
       </section>
+
+
+      <ProgressDashboard
+        children={
+          children.map(
+            (child) => ({
+              id:
+                child.id,
+
+              nickname:
+                child.nickname,
+
+              ageBand:
+                child.age_band
+            })
+          )
+        }
+      />
 
 
       <section className="mt-6 rounded-3xl bg-white p-6 shadow-sm">
@@ -1318,3 +1340,4 @@ function StatusMessage({
 
 
 export default App;
+
