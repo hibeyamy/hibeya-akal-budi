@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.next/
+.turbo/
+coverage/
+
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+
+# Local Supabase
+supabase/.branches/
+supabase/.temp/
+
+# Cloudflare
+.wrangler/
+.dev.vars
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Editors
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+
+# Operating systems
+.DS_Store
+Thumbs.db
+
+# Testing
+playwright-report/
+test-results/
+
+# TypeScript
+*.tsbuildinfo
