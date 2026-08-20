@@ -46,12 +46,6 @@ export interface LearnerDeviceIdentity {
   activatedAt: number;
 }
 
-export interface LocalSetting {
-  key: string;
-
-  value: unknown;
-}
-
 interface AkalBudiDatabase extends DBSchema {
   sessions: {
     key: string;
@@ -68,18 +62,13 @@ interface AkalBudiDatabase extends DBSchema {
     key: "active-device";
     value: LearnerDeviceIdentity;
   };
-
-  settings: {
-    key: string;
-    value: LocalSetting;
-  };
 }
 
 const DATABASE_NAME =
   "hibeya-akal-budi";
 
 const DATABASE_VERSION =
-  3;
+  2;
 
 let databasePromise:
   | Promise<
@@ -139,19 +128,6 @@ export function getDatabase() {
                   {
                     keyPath:
                       "id"
-                  }
-                );
-            }
-
-            if (
-              oldVersion < 3
-            ) {
-              database
-                .createObjectStore(
-                  "settings",
-                  {
-                    keyPath:
-                      "key"
                   }
                 );
             }

@@ -36,33 +36,14 @@ export interface ResolvedPlayableActivity
 export const playableActivities:
   readonly PlayableActivity[] = [
 
-    {
-      id:
-        "warna-bunga-raya-001",
-
-      blueprintId:
-        "warna-bunga-raya",
-
-      version:
-        1,
-
-      enabled:
-        true,
-
-      ageBands:
-        [
-          "3-4"
-        ],
-
-      titleMs:
-        "Mana Bunga Raya Merah?",
-
-      titleEn:
-        "Which Hibiscus Is Red?",
-
-      implementationKey:
-        "colour-choice-v1"
-    },
+    // ========================================================
+    // EXISTING GENERIC COLOUR ACTIVITY
+    //
+    // Retained for backwards compatibility and regression
+    // testing. It should eventually be retired from the
+    // primary learner journey in favour of locally contextual
+    // activities.
+    // ========================================================
 
     {
       id:
@@ -77,16 +58,47 @@ export const playableActivities:
       enabled:
         true,
 
-      ageBands:
-        [
-          "3-4"
-        ],
+      ageBands: [
+        "3-4"
+      ],
 
       titleMs:
         "Cari Warna Merah",
 
       titleEn:
         "Find the Red Colour",
+
+      implementationKey:
+        "colour-choice-v1"
+    },
+
+
+    // ========================================================
+    // FIRST MALAYSIAN PLAYABLE ACTIVITY
+    // ========================================================
+
+    {
+      id:
+        "warna-bunga-raya-001",
+
+      blueprintId:
+        "warna-bunga-raya",
+
+      version:
+        1,
+
+      enabled:
+        true,
+
+      ageBands: [
+        "3-4"
+      ],
+
+      titleMs:
+        "Mana Bunga Raya Merah?",
+
+      titleEn:
+        "Which Hibiscus Is Red?",
 
       implementationKey:
         "colour-choice-v1"
@@ -101,7 +113,7 @@ export function getPlayableActivity(
 
   const activity =
     playableActivities.find(
-      item =>
+      (item) =>
         item.id ===
         activityId
     );
@@ -114,7 +126,7 @@ export function getPlayableActivity(
 
   const blueprint =
     activityBlueprints.find(
-      item =>
+      (item) =>
         item.id ===
         activity.blueprintId
     );
@@ -138,7 +150,7 @@ export function getPlayableActivitiesForAgeBand(
 
   return playableActivities
     .filter(
-      activity =>
+      (activity) =>
         activity.enabled &&
         activity
           .ageBands
@@ -147,7 +159,7 @@ export function getPlayableActivitiesForAgeBand(
           )
     )
     .map(
-      activity =>
+      (activity) =>
         getPlayableActivity(
           activity.id
         )
@@ -156,7 +168,6 @@ export function getPlayableActivitiesForAgeBand(
       (
         activity
       ): activity is ResolvedPlayableActivity =>
-        activity !==
-        null
+        activity !== null
     );
 }

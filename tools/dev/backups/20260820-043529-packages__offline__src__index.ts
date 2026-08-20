@@ -52,26 +52,3 @@ export {
   closeDatabase,
   resetDatabaseForTests
 } from "./database";
-
-export {
-  clearLearnerRuntimeProfile,
-  getCachedLearnerRuntimeProfile,
-  saveLearnerRuntimeProfile
-} from "./learnerRuntimeProfile.repository";
-
-
-export type {
-  CachedLearnerAgeBand,
-  CachedLearnerLanguage,
-  CachedLearnerRuntimeProfile
-} from "./learnerRuntimeProfile.repository";
-export {
-  clearLearnerJourneyState,
-  getLearnerJourneyState,
-  recordCompletedJourneyActivity
-} from "./learningJourney.repository";
-
-
-export type {
-  LearnerJourneyState
-} from "./learningJourney.repository";

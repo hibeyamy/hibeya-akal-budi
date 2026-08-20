@@ -4,8 +4,7 @@ import {
 } from "@akal-budi/content-schema";
 
 
-const activity:
-  ActivityContent =
+const activity =
 {
   "id": "warna-merah-001",
   "version": 2,
@@ -101,7 +100,8 @@ const activity:
     "estimatedSeconds": 120,
     "active": true
   }
-};
+}
+  satisfies ActivityContent;
 
 
 export const warnaMerah001 =

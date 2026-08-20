@@ -35,6 +35,7 @@ export function resolveRuntimeActivity(
 
   const implementation =
     getActivityImplementation(
+      catalogue.id,
       catalogue
         .implementationKey
     );

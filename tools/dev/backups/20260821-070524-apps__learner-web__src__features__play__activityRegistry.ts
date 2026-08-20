@@ -5,7 +5,6 @@ import {
 
 
 type SupportedActivity =
-  typeof warnaBungaRaya001 |
   typeof warnaMerah001;
 
 
@@ -25,17 +24,6 @@ const implementations:
 
     {
       activityId:
-        "warna-bunga-raya-001",
-
-      implementationKey:
-        "colour-choice-v1",
-
-      activity:
-        warnaBungaRaya001
-    },
-
-    {
-      activityId:
         "warna-merah-001",
 
       implementationKey:
@@ -43,6 +31,18 @@ const implementations:
 
       activity:
         warnaMerah001
+    },
+
+
+    {
+      activityId:
+        "warna-bunga-raya-001",
+
+      implementationKey:
+        "colour-choice-v1",
+
+      activity:
+        warnaBungaRaya001
     }
 
   ];
@@ -55,7 +55,7 @@ export function getActivityImplementation(
 
   return (
     implementations.find(
-      implementation =>
+      (implementation) =>
         implementation
           .activityId ===
           activityId &&
@@ -74,7 +74,7 @@ export function hasActivityImplementation(
 ): boolean {
 
   return implementations.some(
-    implementation =>
+    (implementation) =>
       implementation
         .activityId ===
         activityId &&

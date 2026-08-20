@@ -1,27 +1,27 @@
 {
-  "name": "hibeya-akal-budi",
-  "private": true,
-  "version": "0.1.0",
-  "description": "HIBEYA Akal Budi — Membina Akal. Menyemai Budi.",
-  "packageManager": "pnpm@11.22.0",
-  "engines": {
-    "node": ">=24 <25"
-  },
-  "scripts": {
-    "dev": "turbo run dev",
-    "build": "turbo run build",
-    "lint": "turbo run lint",
-    "typecheck": "turbo run typecheck",
-    "test": "turbo run test",
-    "test:run": "turbo run test -- --run",
-    "clean": "turbo run clean"
-  },
-  "devDependencies": {
-    "@supabase/supabase-js": "^2.112.3",
-    "fake-indexeddb": "^6.2.5",
-    "supabase": "^2.115.0",
-    "turbo": "^2.5.0",
-    "typescript": "~6.0.2",
-    "vitest": "^4.0.0"
-  }
+    "name":  "hibeya-akal-budi",
+    "private":  true,
+    "version":  "0.1.0",
+    "description":  "HIBEYA Akal Budi â€” Membina Akal. Menyemai Budi.",
+    "engines":  {
+                    "node":  "\u003e=24 \u003c25"
+                },
+    "scripts":  {
+                    "dev":  "turbo run dev",
+                    "build":  "turbo run build",
+                    "lint":  "turbo run lint",
+                    "typecheck":  "turbo run typecheck",
+                    "test":  "turbo run test",
+                    "test:run":  "turbo run test -- --run",
+                    "clean":  "turbo run clean"
+                },
+    "devDependencies":  {
+                            "@supabase/supabase-js":  "^2.112.3",
+                            "fake-indexeddb":  "^6.2.5",
+                            "supabase":  "^2.115.0",
+                            "turbo":  "^2.5.0",
+                            "typescript":  "~6.0.2",
+                            "vitest":  "^4.0.0"
+                        },
+    "packageManager":  "pnpm@11.22.0"
 }

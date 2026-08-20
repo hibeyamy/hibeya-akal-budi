@@ -1,0 +1,1685 @@
+param(
+  [switch]$Commit
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+$repoRoot = (Get-Location).Path
+$logsRoot = Join-Path $repoRoot "tools\dev\logs"
+$backupRoot = Join-Path $repoRoot "tools\dev\backups"
+
+New-Item -ItemType Directory -Force -Path $logsRoot | Out-Null
+New-Item -ItemType Directory -Force -Path $backupRoot | Out-Null
+
+function Write-Step {
+  param([string]$Message)
+  Write-Host ""
+  Write-Host "==> $Message" -ForegroundColor Cyan
+}
+
+function Write-Utf8NoBom {
+  param(
+    [Parameter(Mandatory)][string]$Path,
+    [Parameter(Mandatory)][AllowEmptyString()][string]$Content
+  )
+
+  $directory = Split-Path -Parent $Path
+
+  if ($directory -and -not (Test-Path $directory)) {
+    New-Item -ItemType Directory -Force -Path $directory | Out-Null
+  }
+
+  [System.IO.File]::WriteAllText(
+    $Path,
+    $Content,
+    [System.Text.UTF8Encoding]::new($false)
+  )
+}
+
+function Require-File {
+  param([string]$Path)
+
+  if (-not (Test-Path $Path)) {
+    throw "Required file not found: $Path"
+  }
+}
+
+function Get-Text {
+  param([string]$Path)
+  Require-File $Path
+  return Get-Content $Path -Raw
+}
+
+function Save-Diagnostic {
+  param(
+    [string]$Stage,
+    [string]$Output
+  )
+
+  $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+  $path = Join-Path $logsRoot "phase004-v4-$timestamp-$Stage.log"
+
+  Write-Utf8NoBom -Path $path -Content $Output
+
+  Write-Host ""
+  Write-Host "Diagnostic log:" -ForegroundColor Yellow
+  Write-Host "  $path"
+}
+
+function Backup-File {
+  param([string]$Path)
+
+  if (-not (Test-Path $Path)) {
+    return
+  }
+
+  $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+  $relative = $Path.Substring($repoRoot.Length).TrimStart('\')
+  $safeName = $relative.Replace('\', '__')
+  $destination = Join-Path $backupRoot "$timestamp-$safeName"
+
+  Copy-Item -Path $Path -Destination $destination -Force
+}
+
+function Invoke-Logged {
+  param(
+    [string]$Name,
+    [scriptblock]$Command
+  )
+
+  Write-Step $Name
+
+  $output = & $Command 2>&1
+  $exitCode = $LASTEXITCODE
+  $text = ($output | Out-String)
+
+  Write-Host $text
+
+  return @{
+    Passed = ($exitCode -eq 0)
+    ExitCode = $exitCode
+    Output = $text
+  }
+}
+
+
+Write-Host ""
+Write-Host "====================================================" -ForegroundColor Cyan
+Write-Host "HIBEYA AKAL BUDI - RECONCILE + PHASE 004 V4" -ForegroundColor Cyan
+Write-Host "Matches the actual IndexedDB schema (v2 -> v3)" -ForegroundColor Cyan
+Write-Host "====================================================" -ForegroundColor Cyan
+
+
+$databasePath =
+  Join-Path $repoRoot "packages\offline\src\database.ts"
+
+$offlineIndexPath =
+  Join-Path $repoRoot "packages\offline\src\index.ts"
+
+$playerPath =
+  Join-Path $repoRoot "apps\learner-web\src\features\play\ActivityPlayer.tsx"
+
+$deviceServicePath =
+  Join-Path $repoRoot "apps\learner-web\src\services\deviceActivationService.ts"
+
+$cataloguePath =
+  Join-Path $repoRoot "packages\content-library\src\catalogue.ts"
+
+$runtimeResolverPath =
+  Join-Path $repoRoot "apps\learner-web\src\features\play\resolvePlayableActivity.ts"
+
+$selectorPath =
+  Join-Path $repoRoot "apps\learner-web\src\features\play\selectLearnerActivity.ts"
+
+$selectorTestPath =
+  Join-Path $repoRoot "apps\learner-web\src\features\play\selectLearnerActivity.test.ts"
+
+$runtimeProfileRepoPath =
+  Join-Path $repoRoot "packages\offline\src\learnerRuntimeProfile.repository.ts"
+
+$journeyRepoPath =
+  Join-Path $repoRoot "packages\offline\src\learningJourney.repository.ts"
+
+
+foreach ($path in @(
+  $databasePath,
+  $offlineIndexPath,
+  $playerPath,
+  $deviceServicePath,
+  $cataloguePath,
+  $runtimeResolverPath
+)) {
+  Require-File $path
+}
+
+
+Write-Step "Verifying current IndexedDB database version"
+
+$currentDatabase = Get-Text $databasePath
+
+if (-not $currentDatabase.Contains('const DATABASE_VERSION =')) {
+  throw "Could not locate DATABASE_VERSION in packages\offline\src\database.ts"
+}
+
+if (
+  -not $currentDatabase.Contains('learnerDevice:') -or
+  -not $currentDatabase.Contains('sessions:')
+) {
+  throw "database.ts does not match the expected existing Akal Budi v2 stores."
+}
+
+
+# ============================================================
+# Upgrade database.ts from v2 to v3 with settings store.
+# ============================================================
+
+Write-Step "Upgrading IndexedDB schema to version 3"
+
+Backup-File $databasePath
+
+$databaseV3 = @"
+import {
+  openDB,
+  type DBSchema,
+  type IDBPDatabase
+} from "idb";
+
+import type {
+  GameAnswer,
+  GameSessionResult
+} from "@akal-budi/game-runtime";
+
+export type SyncStatus =
+  | "pending"
+  | "synced"
+  | "failed";
+
+export interface StoredSession {
+  id: string;
+
+  activityId: string;
+  activityVersion: number;
+
+  startedAt: number;
+  completedAt?: number;
+
+  answers: GameAnswer[];
+
+  result?: GameSessionResult;
+
+  syncStatus: SyncStatus;
+
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface LearnerDeviceIdentity {
+  id: "active-device";
+
+  deviceId: string;
+  childId: string;
+
+  deviceToken: string;
+
+  deviceName: string | null;
+
+  activatedAt: number;
+}
+
+export interface LocalSetting {
+  key: string;
+
+  value: unknown;
+}
+
+interface AkalBudiDatabase extends DBSchema {
+  sessions: {
+    key: string;
+    value: StoredSession;
+
+    indexes: {
+      "by-sync-status": SyncStatus;
+      "by-activity-id": string;
+      "by-updated-at": number;
+    };
+  };
+
+  learnerDevice: {
+    key: "active-device";
+    value: LearnerDeviceIdentity;
+  };
+
+  settings: {
+    key: string;
+    value: LocalSetting;
+  };
+}
+
+const DATABASE_NAME =
+  "hibeya-akal-budi";
+
+const DATABASE_VERSION =
+  3;
+
+let databasePromise:
+  | Promise<
+      IDBPDatabase<AkalBudiDatabase>
+    >
+  | undefined;
+
+export function getDatabase() {
+  if (!databasePromise) {
+    databasePromise =
+      openDB<AkalBudiDatabase>(
+        DATABASE_NAME,
+        DATABASE_VERSION,
+        {
+          upgrade(
+            database,
+            oldVersion
+          ) {
+            if (
+              oldVersion < 1
+            ) {
+              const sessionStore =
+                database
+                  .createObjectStore(
+                    "sessions",
+                    {
+                      keyPath:
+                        "id"
+                    }
+                  );
+
+              sessionStore
+                .createIndex(
+                  "by-sync-status",
+                  "syncStatus"
+                );
+
+              sessionStore
+                .createIndex(
+                  "by-activity-id",
+                  "activityId"
+                );
+
+              sessionStore
+                .createIndex(
+                  "by-updated-at",
+                  "updatedAt"
+                );
+            }
+
+            if (
+              oldVersion < 2
+            ) {
+              database
+                .createObjectStore(
+                  "learnerDevice",
+                  {
+                    keyPath:
+                      "id"
+                  }
+                );
+            }
+
+            if (
+              oldVersion < 3
+            ) {
+              database
+                .createObjectStore(
+                  "settings",
+                  {
+                    keyPath:
+                      "key"
+                  }
+                );
+            }
+          }
+        }
+      );
+  }
+
+  return databasePromise;
+}
+
+export async function closeDatabase():
+  Promise<void> {
+  if (!databasePromise) {
+    return;
+  }
+
+  const database =
+    await databasePromise;
+
+  database.close();
+
+  databasePromise =
+    undefined;
+}
+
+export async function resetDatabaseForTests():
+  Promise<void> {
+  await closeDatabase();
+
+  await new Promise<void>(
+    (
+      resolve,
+      reject
+    ) => {
+      const request =
+        indexedDB
+          .deleteDatabase(
+            DATABASE_NAME
+          );
+
+      request.onsuccess =
+        () => resolve();
+
+      request.onerror =
+        () =>
+          reject(
+            request.error ??
+              new Error(
+                "Failed to delete test database."
+              )
+          );
+
+      request.onblocked =
+        () =>
+          reject(
+            new Error(
+              "Test database deletion was blocked by an open connection."
+            )
+          );
+    }
+  );
+}
+"@
+
+Write-Utf8NoBom -Path $databasePath -Content $databaseV3
+
+
+# ============================================================
+# Runtime-profile cache
+# ============================================================
+
+Write-Step "Creating offline learner runtime-profile cache"
+
+$runtimeProfileRepo = @"
+import {
+  getDatabase
+} from "./database";
+
+
+const RUNTIME_PROFILE_KEY =
+  "learner-runtime-profile";
+
+
+export type CachedLearnerAgeBand =
+  | "2-3"
+  | "3-4"
+  | "4-5"
+  | "5-6";
+
+
+export type CachedLearnerLanguage =
+  | "ms"
+  | "en";
+
+
+export interface CachedLearnerRuntimeProfile {
+  childId: string;
+
+  ageBand:
+    CachedLearnerAgeBand;
+
+  preferredLanguage:
+    CachedLearnerLanguage;
+
+  validatedAt:
+    number;
+}
+
+
+export async function saveLearnerRuntimeProfile(
+  profile: CachedLearnerRuntimeProfile
+): Promise<void> {
+  const db =
+    await getDatabase();
+
+  await db.put(
+    "settings",
+    {
+      key:
+        RUNTIME_PROFILE_KEY,
+
+      value:
+        profile
+    }
+  );
+}
+
+
+export async function getCachedLearnerRuntimeProfile():
+  Promise<
+    CachedLearnerRuntimeProfile |
+    null
+  > {
+  const db =
+    await getDatabase();
+
+  const stored =
+    await db.get(
+      "settings",
+      RUNTIME_PROFILE_KEY
+    );
+
+  if (
+    !stored ||
+    !isRuntimeProfile(
+      stored.value
+    )
+  ) {
+    return null;
+  }
+
+  return stored.value;
+}
+
+
+export async function clearLearnerRuntimeProfile():
+  Promise<void> {
+  const db =
+    await getDatabase();
+
+  await db.delete(
+    "settings",
+    RUNTIME_PROFILE_KEY
+  );
+}
+
+
+function isRuntimeProfile(
+  value: unknown
+): value is CachedLearnerRuntimeProfile {
+  if (
+    typeof value !==
+      "object" ||
+    value ===
+      null
+  ) {
+    return false;
+  }
+
+  const candidate =
+    value as Record<
+      string,
+      unknown
+    >;
+
+  return (
+    typeof candidate.childId ===
+      "string" &&
+    isAgeBand(
+      candidate.ageBand
+    ) &&
+    isLanguage(
+      candidate.preferredLanguage
+    ) &&
+    typeof candidate.validatedAt ===
+      "number"
+  );
+}
+
+
+function isAgeBand(
+  value: unknown
+): value is CachedLearnerAgeBand {
+  return (
+    value === "2-3" ||
+    value === "3-4" ||
+    value === "4-5" ||
+    value === "5-6"
+  );
+}
+
+
+function isLanguage(
+  value: unknown
+): value is CachedLearnerLanguage {
+  return (
+    value === "ms" ||
+    value === "en"
+  );
+}
+"@
+
+Write-Utf8NoBom -Path $runtimeProfileRepoPath -Content $runtimeProfileRepo
+
+
+# ============================================================
+# Journey cache
+# ============================================================
+
+Write-Step "Creating deterministic journey cache"
+
+$journeyRepo = @"
+import {
+  getDatabase
+} from "./database";
+
+
+const JOURNEY_KEY =
+  "learner-journey-state";
+
+
+export interface LearnerJourneyState {
+  lastCompletedActivityId:
+    string | null;
+
+  completedSessionCount:
+    number;
+
+  updatedAt:
+    number;
+}
+
+
+const emptyJourney:
+  LearnerJourneyState = {
+    lastCompletedActivityId:
+      null,
+
+    completedSessionCount:
+      0,
+
+    updatedAt:
+      0
+  };
+
+
+export async function getLearnerJourneyState():
+  Promise<LearnerJourneyState> {
+  const db =
+    await getDatabase();
+
+  const stored =
+    await db.get(
+      "settings",
+      JOURNEY_KEY
+    );
+
+  if (
+    !stored ||
+    !isJourneyState(
+      stored.value
+    )
+  ) {
+    return {
+      ...emptyJourney
+    };
+  }
+
+  return stored.value;
+}
+
+
+export async function recordCompletedJourneyActivity(
+  activityId: string
+): Promise<LearnerJourneyState> {
+  const current =
+    await getLearnerJourneyState();
+
+  const next:
+    LearnerJourneyState = {
+      lastCompletedActivityId:
+        activityId,
+
+      completedSessionCount:
+        current.completedSessionCount +
+        1,
+
+      updatedAt:
+        Date.now()
+    };
+
+  const db =
+    await getDatabase();
+
+  await db.put(
+    "settings",
+    {
+      key:
+        JOURNEY_KEY,
+
+      value:
+        next
+    }
+  );
+
+  return next;
+}
+
+
+export async function clearLearnerJourneyState():
+  Promise<void> {
+  const db =
+    await getDatabase();
+
+  await db.delete(
+    "settings",
+    JOURNEY_KEY
+  );
+}
+
+
+function isJourneyState(
+  value: unknown
+): value is LearnerJourneyState {
+  if (
+    typeof value !==
+      "object" ||
+    value ===
+      null
+  ) {
+    return false;
+  }
+
+  const candidate =
+    value as Record<
+      string,
+      unknown
+    >;
+
+  return (
+    (
+      candidate
+        .lastCompletedActivityId ===
+        null ||
+      typeof candidate
+        .lastCompletedActivityId ===
+        "string"
+    ) &&
+    typeof candidate
+      .completedSessionCount ===
+      "number" &&
+    Number.isInteger(
+      candidate
+        .completedSessionCount
+    ) &&
+    candidate
+      .completedSessionCount >=
+      0 &&
+    typeof candidate.updatedAt ===
+      "number"
+  );
+}
+"@
+
+Write-Utf8NoBom -Path $journeyRepoPath -Content $journeyRepo
+
+
+# ============================================================
+# Reconcile offline package exports.
+# ============================================================
+
+Write-Step "Reconciling offline package exports"
+
+Backup-File $offlineIndexPath
+$offlineIndex = Get-Text $offlineIndexPath
+
+if (-not $offlineIndex.Contains("getCachedLearnerRuntimeProfile")) {
+  $offlineIndex += @"
+
+export {
+  clearLearnerRuntimeProfile,
+  getCachedLearnerRuntimeProfile,
+  saveLearnerRuntimeProfile
+} from "./learnerRuntimeProfile.repository";
+
+
+export type {
+  CachedLearnerAgeBand,
+  CachedLearnerLanguage,
+  CachedLearnerRuntimeProfile
+} from "./learnerRuntimeProfile.repository";
+"@
+}
+
+if (-not $offlineIndex.Contains("getLearnerJourneyState")) {
+  $offlineIndex += @"
+
+export {
+  clearLearnerJourneyState,
+  getLearnerJourneyState,
+  recordCompletedJourneyActivity
+} from "./learningJourney.repository";
+
+
+export type {
+  LearnerJourneyState
+} from "./learningJourney.repository";
+"@
+}
+
+Write-Utf8NoBom -Path $offlineIndexPath -Content $offlineIndex
+
+
+# ============================================================
+# Rebuild missing age-aware selector.
+# ============================================================
+
+Write-Step "Creating age-aware journey selector"
+
+$selector = @"
+import {
+  getPlayableActivitiesForAgeBand,
+  type ResolvedPlayableActivity
+} from "@akal-budi/content-library";
+
+import type {
+  LearnerAgeBand
+} from "../../services/deviceActivationService";
+
+
+export interface LearnerActivitySelectionInput {
+  ageBand:
+    LearnerAgeBand;
+
+  lastCompletedActivityId:
+    string | null;
+}
+
+
+export function selectLearnerActivity({
+  ageBand,
+  lastCompletedActivityId
+}: LearnerActivitySelectionInput):
+  ResolvedPlayableActivity |
+  null {
+
+  const eligible =
+    getPlayableActivitiesForAgeBand(
+      ageBand
+    );
+
+  if (
+    eligible.length ===
+    0
+  ) {
+    return null;
+  }
+
+  const ordered =
+    [...eligible].sort(
+      (a, b) => {
+
+        const aMalaysia =
+          a.blueprint
+            .malaysiaElements
+            .length > 0
+            ? 1
+            : 0;
+
+        const bMalaysia =
+          b.blueprint
+            .malaysiaElements
+            .length > 0
+            ? 1
+            : 0;
+
+        if (
+          aMalaysia !==
+          bMalaysia
+        ) {
+          return (
+            bMalaysia -
+            aMalaysia
+          );
+        }
+
+        if (
+          a.blueprint
+            .difficulty !==
+          b.blueprint
+            .difficulty
+        ) {
+          return (
+            a.blueprint
+              .difficulty -
+            b.blueprint
+              .difficulty
+          );
+        }
+
+        return (
+          a.id.localeCompare(
+            b.id
+          )
+        );
+      }
+    );
+
+  if (
+    ordered.length ===
+    1
+  ) {
+    return (
+      ordered[0] ??
+      null
+    );
+  }
+
+  const currentIndex =
+    lastCompletedActivityId
+      ? ordered.findIndex(
+          activity =>
+            activity.id ===
+            lastCompletedActivityId
+        )
+      : -1;
+
+  if (
+    currentIndex <
+    0
+  ) {
+    return (
+      ordered[0] ??
+      null
+    );
+  }
+
+  const nextIndex =
+    (
+      currentIndex +
+      1
+    ) %
+    ordered.length;
+
+  return (
+    ordered[nextIndex] ??
+    ordered[0] ??
+    null
+  );
+}
+"@
+
+Write-Utf8NoBom -Path $selectorPath -Content $selector
+
+
+# ============================================================
+# Selector tests
+# ============================================================
+
+Write-Step "Creating selector tests"
+
+$selectorTests = @"
+import {
+  describe,
+  expect,
+  it
+} from "vitest";
+
+import {
+  selectLearnerActivity
+} from "./selectLearnerActivity";
+
+
+describe(
+  "selectLearnerActivity",
+  () => {
+
+    it(
+      "selects eligible 3-4 content",
+      () => {
+        const activity =
+          selectLearnerActivity({
+            ageBand:
+              "3-4",
+
+            lastCompletedActivityId:
+              null
+          });
+
+        expect(activity)
+          .not.toBeNull();
+
+        expect(
+          activity
+            ?.ageBands
+            .includes(
+              "3-4"
+            )
+        ).toBe(true);
+      }
+    );
+
+
+    it(
+      "avoids immediate repetition when alternatives exist",
+      () => {
+        const first =
+          selectLearnerActivity({
+            ageBand:
+              "3-4",
+
+            lastCompletedActivityId:
+              null
+          });
+
+        expect(first)
+          .not.toBeNull();
+
+        const second =
+          selectLearnerActivity({
+            ageBand:
+              "3-4",
+
+            lastCompletedActivityId:
+              first?.id ??
+              null
+          });
+
+        expect(second)
+          .not.toBeNull();
+
+        if (
+          first &&
+          second
+        ) {
+          expect(
+            second.id
+          ).not.toBe(
+            first.id
+          );
+        }
+      }
+    );
+
+
+    it(
+      "does not serve unsupported content to 2-3",
+      () => {
+        expect(
+          selectLearnerActivity({
+            ageBand:
+              "2-3",
+
+            lastCompletedActivityId:
+              null
+          })
+        ).toBeNull();
+      }
+    );
+
+  }
+);
+"@
+
+Write-Utf8NoBom -Path $selectorTestPath -Content $selectorTests
+
+
+# ============================================================
+# Ensure deviceActivationService exposes runtime profile.
+# ============================================================
+
+Write-Step "Reconciling learner runtime-profile service"
+
+Backup-File $deviceServicePath
+$deviceService = Get-Text $deviceServicePath
+
+if (-not $deviceService.Contains("export type LearnerAgeBand")) {
+  $deviceService += @"
+
+export type LearnerAgeBand =
+  | "2-3"
+  | "3-4"
+  | "4-5"
+  | "5-6";
+
+
+export type LearnerLanguage =
+  | "ms"
+  | "en";
+
+
+export interface LearnerRuntimeProfile {
+  childId: string;
+
+  ageBand:
+    LearnerAgeBand;
+
+  preferredLanguage:
+    LearnerLanguage;
+}
+"@
+}
+
+if (-not $deviceService.Contains("getLearnerRuntimeProfile")) {
+  $deviceService += @"
+
+export async function getLearnerRuntimeProfile(
+  deviceId: string,
+  deviceToken: string
+): Promise<LearnerRuntimeProfile> {
+
+  const {
+    data,
+    error
+  } =
+    await supabase.rpc(
+      "get_learner_runtime_profile",
+      {
+        p_device_id:
+          deviceId,
+
+        p_device_token:
+          deviceToken
+      }
+    );
+
+  if (error) {
+    throw error;
+  }
+
+  const result =
+    data?.[0];
+
+  if (!result) {
+    throw new Error(
+      "Profil pembelajaran tidak ditemui."
+    );
+  }
+
+  if (
+    !isLearnerAgeBand(
+      result.age_band
+    )
+  ) {
+    throw new Error(
+      "Julat umur pembelajaran tidak sah."
+    );
+  }
+
+  if (
+    !isLearnerLanguage(
+      result.preferred_language
+    )
+  ) {
+    throw new Error(
+      "Bahasa pembelajaran tidak sah."
+    );
+  }
+
+  return {
+    childId:
+      result.child_id,
+
+    ageBand:
+      result.age_band,
+
+    preferredLanguage:
+      result.preferred_language
+  };
+}
+
+
+function isLearnerAgeBand(
+  value: string
+): value is LearnerAgeBand {
+  return (
+    value === "2-3" ||
+    value === "3-4" ||
+    value === "4-5" ||
+    value === "5-6"
+  );
+}
+
+
+function isLearnerLanguage(
+  value: string
+): value is LearnerLanguage {
+  return (
+    value === "ms" ||
+    value === "en"
+  );
+}
+"@
+}
+
+Write-Utf8NoBom -Path $deviceServicePath -Content $deviceService
+
+
+# ============================================================
+# Migration: create only if missing. Dry-run later.
+# ============================================================
+
+Write-Step "Ensuring learner runtime-profile Supabase migration exists"
+
+$migrationDir =
+  Join-Path $repoRoot "supabase\migrations"
+
+New-Item -ItemType Directory -Force -Path $migrationDir | Out-Null
+
+$existingMigration =
+  Get-ChildItem $migrationDir -Filter "*.sql" |
+  Where-Object {
+    (Get-Content $_.FullName -Raw) -match "get_learner_runtime_profile"
+  } |
+  Select-Object -First 1
+
+if (-not $existingMigration) {
+  $migrationPath =
+    Join-Path $migrationDir "20260820043100_learner_runtime_profile.sql"
+
+  $migration = @"
+create or replace function
+  public.get_learner_runtime_profile(
+    p_device_id uuid,
+    p_device_token text
+  )
+returns table (
+  child_id uuid,
+  age_band text,
+  preferred_language text
+)
+language plpgsql
+security definer
+set search_path = ''
+as `$`$
+declare
+  v_device
+    public.learner_devices%rowtype;
+begin
+
+  v_device :=
+    private.get_valid_learner_device(
+      p_device_id,
+      p_device_token
+    );
+
+  return query
+  select
+    c.id,
+    c.age_band,
+    c.preferred_language
+  from
+    public.children as c
+  where
+    c.id =
+      v_device.child_id;
+
+end;
+`$`$;
+
+
+revoke all
+on function
+  public.get_learner_runtime_profile(
+    uuid,
+    text
+  )
+from public, authenticated;
+
+
+grant execute
+on function
+  public.get_learner_runtime_profile(
+    uuid,
+    text
+  )
+to anon;
+"@
+
+  Write-Utf8NoBom -Path $migrationPath -Content $migration
+  Write-Host "Created migration: $migrationPath" -ForegroundColor Green
+}
+else {
+  Write-Host "Existing learner runtime-profile migration found." -ForegroundColor Green
+}
+
+
+# ============================================================
+# Reconcile ActivityPlayer.
+# ============================================================
+
+Write-Step "Reconciling ActivityPlayer"
+
+Backup-File $playerPath
+$player = Get-Text $playerPath
+
+# Add offline imports if missing.
+if (-not $player.Contains("getCachedLearnerRuntimeProfile")) {
+  $anchor = @"
+  getLatestIncompleteSession,
+  getLearnerDevice,
+  processPendingSessions,
+"@
+
+  $replacement = @"
+  getCachedLearnerRuntimeProfile,
+  getLatestIncompleteSession,
+  getLearnerDevice,
+  getLearnerJourneyState,
+  processPendingSessions,
+  recordCompletedJourneyActivity,
+  saveLearnerRuntimeProfile,
+"@
+
+  if (-not $player.Contains($anchor)) {
+    throw "Could not safely reconcile the @akal-budi/offline import in ActivityPlayer.tsx"
+  }
+
+  $player = $player.Replace($anchor, $replacement)
+}
+else {
+  if (-not $player.Contains("getLearnerJourneyState")) {
+    $player = $player.Replace(
+      "  getLearnerDevice,",
+      "  getLearnerDevice,`r`n  getLearnerJourneyState,"
+    )
+  }
+
+  if (-not $player.Contains("recordCompletedJourneyActivity")) {
+    $player = $player.Replace(
+      "  processPendingSessions,",
+      "  processPendingSessions,`r`n  recordCompletedJourneyActivity,"
+    )
+  }
+}
+
+# Add runtime profile service import if missing.
+if (-not $player.Contains("getLearnerRuntimeProfile")) {
+  $importAnchor = @"
+import {
+  localSyncProvider
+} from "../../services/localSyncProvider";
+"@
+
+  $newImport = @"
+import {
+  getLearnerRuntimeProfile,
+  type LearnerAgeBand
+} from "../../services/deviceActivationService";
+
+import {
+  localSyncProvider
+} from "../../services/localSyncProvider";
+"@
+
+  if (-not $player.Contains($importAnchor)) {
+    throw "Could not safely add the deviceActivationService import."
+  }
+
+  $player = $player.Replace($importAnchor, $newImport)
+}
+
+# Add selector import if missing.
+if (-not $player.Contains('from "./selectLearnerActivity"')) {
+  $resolverImport = @"
+import {
+  resolveRuntimeActivity
+} from "./resolvePlayableActivity";
+"@
+
+  $resolverPlusSelector = @"
+import {
+  resolveRuntimeActivity
+} from "./resolvePlayableActivity";
+
+import {
+  selectLearnerActivity
+} from "./selectLearnerActivity";
+"@
+
+  if (-not $player.Contains($resolverImport)) {
+    throw "Could not safely add selectLearnerActivity import."
+  }
+
+  $player = $player.Replace($resolverImport, $resolverPlusSelector)
+}
+
+# If the player is still hard-coded, stop here rather than guessing a large rewrite.
+if ($player.Contains("DEFAULT_ACTIVITY_ID")) {
+  throw @"
+ActivityPlayer.tsx is still using DEFAULT_ACTIVITY_ID.
+The prerequisite files have now been rebuilt safely, but the player shell is older than expected.
+
+Please send the current ActivityPlayer.tsx after this script finishes creating prerequisites, and I will provide one final whole-file reconciled player.
+"@
+}
+
+# Upgrade old selector call if it exists.
+$player = $player.Replace(
+  "selectLearnerActivity(`r`n          profile.ageBand`r`n        )",
+  "selectLearnerActivity({`r`n          ageBand:`r`n            profile.ageBand,`r`n`r`n          lastCompletedActivityId:`r`n            null`r`n        })"
+)
+
+# Record journey after completion if not already there.
+if (-not $player.Contains("recordCompletedJourneyActivity(")) {
+  $completionAnchor = @"
+      await completeLocalSession(
+        sessionId,
+        result
+      );
+"@
+
+  $completionReplacement = @"
+      await completeLocalSession(
+        sessionId,
+        result
+      );
+
+
+      await recordCompletedJourneyActivity(
+        activity.id
+      );
+"@
+
+  if ($player.Contains($completionAnchor)) {
+    $player = $player.Replace($completionAnchor, $completionReplacement)
+  }
+}
+
+Write-Utf8NoBom -Path $playerPath -Content $player
+
+
+# ============================================================
+# Tests for new repositories.
+# ============================================================
+
+Write-Step "Creating offline cache tests"
+
+$runtimeProfileTestPath =
+  Join-Path $repoRoot "packages\offline\src\__tests__\learnerRuntimeProfile.repository.test.ts"
+
+$runtimeProfileTests = @"
+import "fake-indexeddb/auto";
+
+import {
+  beforeEach,
+  describe,
+  expect,
+  it
+} from "vitest";
+
+import {
+  resetDatabaseForTests
+} from "../database";
+
+import {
+  clearLearnerRuntimeProfile,
+  getCachedLearnerRuntimeProfile,
+  saveLearnerRuntimeProfile
+} from "../learnerRuntimeProfile.repository";
+
+
+describe(
+  "learner runtime profile cache",
+  () => {
+
+    beforeEach(
+      async () => {
+        await resetDatabaseForTests();
+      }
+    );
+
+    it(
+      "stores and retrieves the minimal profile",
+      async () => {
+        await saveLearnerRuntimeProfile({
+          childId:
+            "child-123",
+
+          ageBand:
+            "3-4",
+
+          preferredLanguage:
+            "ms",
+
+          validatedAt:
+            123456
+        });
+
+        expect(
+          await getCachedLearnerRuntimeProfile()
+        ).toEqual({
+          childId:
+            "child-123",
+
+          ageBand:
+            "3-4",
+
+          preferredLanguage:
+            "ms",
+
+          validatedAt:
+            123456
+        });
+      }
+    );
+
+    it(
+      "clears the profile",
+      async () => {
+        await saveLearnerRuntimeProfile({
+          childId:
+            "child-123",
+
+          ageBand:
+            "3-4",
+
+          preferredLanguage:
+            "ms",
+
+          validatedAt:
+            123456
+        });
+
+        await clearLearnerRuntimeProfile();
+
+        expect(
+          await getCachedLearnerRuntimeProfile()
+        ).toBeNull();
+      }
+    );
+
+  }
+);
+"@
+
+Write-Utf8NoBom -Path $runtimeProfileTestPath -Content $runtimeProfileTests
+
+
+$journeyTestPath =
+  Join-Path $repoRoot "packages\offline\src\__tests__\learningJourney.repository.test.ts"
+
+$journeyTests = @"
+import "fake-indexeddb/auto";
+
+import {
+  beforeEach,
+  describe,
+  expect,
+  it
+} from "vitest";
+
+import {
+  resetDatabaseForTests
+} from "../database";
+
+import {
+  clearLearnerJourneyState,
+  getLearnerJourneyState,
+  recordCompletedJourneyActivity
+} from "../learningJourney.repository";
+
+
+describe(
+  "learner journey repository",
+  () => {
+
+    beforeEach(
+      async () => {
+        await resetDatabaseForTests();
+      }
+    );
+
+    it(
+      "starts empty",
+      async () => {
+        expect(
+          await getLearnerJourneyState()
+        ).toEqual({
+          lastCompletedActivityId:
+            null,
+
+          completedSessionCount:
+            0,
+
+          updatedAt:
+            0
+        });
+      }
+    );
+
+    it(
+      "records completion",
+      async () => {
+        const state =
+          await recordCompletedJourneyActivity(
+            "warna-bunga-raya-001"
+          );
+
+        expect(
+          state.lastCompletedActivityId
+        ).toBe(
+          "warna-bunga-raya-001"
+        );
+
+        expect(
+          state.completedSessionCount
+        ).toBe(1);
+      }
+    );
+
+    it(
+      "clears state",
+      async () => {
+        await recordCompletedJourneyActivity(
+          "warna-bunga-raya-001"
+        );
+
+        await clearLearnerJourneyState();
+
+        expect(
+          await getLearnerJourneyState()
+        ).toEqual({
+          lastCompletedActivityId:
+            null,
+
+          completedSessionCount:
+            0,
+
+          updatedAt:
+            0
+        });
+      }
+    );
+
+  }
+);
+"@
+
+Write-Utf8NoBom -Path $journeyTestPath -Content $journeyTests
+
+
+# ============================================================
+# Validation
+# ============================================================
+
+Write-Step "Running repository typecheck"
+
+$typecheck = Invoke-Logged -Name "pnpm typecheck" -Command { pnpm typecheck }
+
+if (-not $typecheck.Passed) {
+  Save-Diagnostic -Stage "typecheck" -Output $typecheck.Output
+  throw "Typecheck failed. See the diagnostic log."
+}
+
+
+Write-Step "Running tests"
+
+$tests = Invoke-Logged -Name "pnpm test" -Command { pnpm test }
+
+if (-not $tests.Passed) {
+  Save-Diagnostic -Stage "test" -Output $tests.Output
+  throw "Tests failed. See the diagnostic log."
+}
+
+
+Write-Step "Running production build"
+
+$build = Invoke-Logged -Name "pnpm build" -Command { pnpm build }
+
+if (-not $build.Passed) {
+  Save-Diagnostic -Stage "build" -Output $build.Output
+  throw "Build failed. See the diagnostic log."
+}
+
+
+Write-Step "Running Supabase migration dry-run"
+
+$dryRun = Invoke-Logged `
+  -Name "pnpm supabase db push --dry-run" `
+  -Command {
+    pnpm supabase db push --dry-run
+  }
+
+if (-not $dryRun.Passed) {
+  Save-Diagnostic -Stage "supabase-dry-run" -Output $dryRun.Output
+  throw "Supabase dry-run failed. Database was not changed."
+}
+
+
+Write-Step "Running git diff --check"
+
+$diffCheck = Invoke-Logged `
+  -Name "git diff --check" `
+  -Command {
+    git diff --check
+  }
+
+if (-not $diffCheck.Passed) {
+  Save-Diagnostic -Stage "git-diff-check" -Output $diffCheck.Output
+  throw "git diff --check failed."
+}
+
+
+if ($Commit) {
+  Write-Step "Committing validated reconciliation"
+
+  git add .
+  git commit -m "feat: reconcile offline learner runtime and journey"
+
+  if ($LASTEXITCODE -ne 0) {
+    throw "Git commit failed."
+  }
+}
+
+
+Write-Host ""
+Write-Host "====================================================" -ForegroundColor Green
+Write-Host "RECONCILE + PHASE 004 V4: PASS" -ForegroundColor Green
+Write-Host "====================================================" -ForegroundColor Green
+Write-Host ""
+Write-Host "IndexedDB upgraded safely:" -ForegroundColor White
+Write-Host "  v2 -> v3" -ForegroundColor Green
+Write-Host "  sessions preserved" -ForegroundColor Green
+Write-Host "  learnerDevice preserved" -ForegroundColor Green
+Write-Host "  settings added" -ForegroundColor Green
+Write-Host ""
+Write-Host "After review, deploy the dry-run migration with:" -ForegroundColor White
+Write-Host "  pnpm supabase db push" -ForegroundColor Cyan

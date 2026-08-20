@@ -16,24 +16,14 @@ import {
   addLocalAnswer,
   completeLocalSession,
   createLocalSession,
-  getCachedLearnerRuntimeProfile,
   getLatestIncompleteSession,
-  getLearnerDevice,
-  getLearnerJourneyState,
   processPendingSessions,
-  recordCompletedJourneyActivity,
-  saveLearnerRuntimeProfile,
   type StoredSession
 } from "@akal-budi/offline";
 
 import {
   useNetworkStatus
 } from "../../hooks/useNetworkStatus";
-
-import {
-  getLearnerRuntimeProfile,
-  type LearnerAgeBand
-} from "../../services/deviceActivationService";
 
 import {
   localSyncProvider
@@ -43,9 +33,9 @@ import {
   resolveRuntimeActivity
 } from "./resolvePlayableActivity";
 
-import {
-  selectLearnerActivity
-} from "./selectLearnerActivity";
+
+const DEFAULT_ACTIVITY_ID =
+  "warna-merah-001";
 
 
 function createSessionId():
@@ -54,367 +44,49 @@ function createSessionId():
 }
 
 
-type ReadyPlayerState = {
-  status:
-    "ready";
-
-  activityId:
-    string;
-
-  ageBand:
-    LearnerAgeBand;
-
-  offlineProfile:
-    boolean;
-};
-
-
-type PlayerState =
-  | {
-      status:
-        "loading";
-    }
-  | ReadyPlayerState
-  | {
-      status:
-        "no-content";
-
-      ageBand:
-        LearnerAgeBand;
-    }
-  | {
-      status:
-        "error";
-
-      message:
-        string;
-    };
-
-
 export function ActivityPlayer() {
   const network =
     useNetworkStatus();
 
-  const [
-    playerState,
-    setPlayerState
-  ] =
-    useState<PlayerState>({
-      status:
-        "loading"
-    });
-
-
-  useEffect(
-    () => {
-      void initialiseLearner();
-    },
-    [
-      network.online
-    ]
-  );
-
-
-  async function initialiseLearner() {
-    setPlayerState({
-      status:
-        "loading"
-    });
-
-
-    const device =
-      await getLearnerDevice();
-
-
-    if (!device) {
-      setPlayerState({
-        status:
-          "error",
-
-        message:
-          "Peranti pembelajaran belum diaktifkan."
-      });
-
-      return;
-    }
-
-
-    if (
-      network.online
-    ) {
-      try {
-        const profile =
-          await getLearnerRuntimeProfile(
-            device.deviceId,
-            device.deviceToken
-          );
-
-
-        if (
-          profile.childId !==
-          device.childId
-        ) {
-          setPlayerState({
-            status:
-              "error",
-
-            message:
-              "Identiti profil pembelajaran tidak sepadan."
-          });
-
-          return;
-        }
-
-
-        await saveLearnerRuntimeProfile({
-          childId:
-            profile.childId,
-
-          ageBand:
-            profile.ageBand,
-
-          preferredLanguage:
-            profile.preferredLanguage,
-
-          validatedAt:
-            Date.now()
-        });
-
-
-        await selectActivityForProfile(
-          profile.ageBand,
-          false
-        );
-
-        return;
-
-      } catch {
-        /*
-         * When the device is online, do not silently fall back
-         * to the cached profile. The server may have rejected a
-         * revoked or otherwise invalid learner device.
-         */
-        setPlayerState({
-          status:
-            "error",
-
-          message:
-            "Peranti pembelajaran tidak dapat disahkan. Cuba semula apabila sambungan stabil."
-        });
-
-        return;
-      }
-    }
-
-
-    const cachedProfile =
-      await getCachedLearnerRuntimeProfile();
-
-
-    if (!cachedProfile) {
-      setPlayerState({
-        status:
-          "error",
-
-        message:
-          "Profil pembelajaran belum tersedia untuk penggunaan luar talian."
-      });
-
-      return;
-    }
-
-
-    if (
-      cachedProfile.childId !==
-      device.childId
-    ) {
-      setPlayerState({
-        status:
-          "error",
-
-        message:
-          "Profil luar talian tidak sepadan dengan peranti ini."
-      });
-
-      return;
-    }
-
-
-    await selectActivityForProfile(
-      cachedProfile.ageBand,
-      true
-    );
-  }
-
-
-  async function selectActivityForProfile(
-    ageBand:
-      LearnerAgeBand,
-
-    offlineProfile:
-      boolean
-  ) {
-    const journey =
-      await getLearnerJourneyState();
-
-
-    const selected =
-      selectLearnerActivity({
-        ageBand,
-
-        lastCompletedActivityId:
-          journey.lastCompletedActivityId
-      });
-
-
-    if (!selected) {
-      setPlayerState({
-        status:
-          "no-content",
-
-        ageBand
-      });
-
-      return;
-    }
-
-
-    setPlayerState({
-      status:
-        "ready",
-
-      activityId:
-        selected.id,
-
-      ageBand,
-
-      offlineProfile
-    });
-  }
-
-
-  async function continueJourney(
-    state:
-      ReadyPlayerState
-  ) {
-    await selectActivityForProfile(
-      state.ageBand,
-      state.offlineProfile
-    );
-  }
-
-
-  if (
-    playerState.status ===
-    "loading"
-  ) {
-    return (
-      <LearnerMessage
-        title="Akal Budi"
-        message="Memilih aktiviti yang sesuai..."
-      />
-    );
-  }
-
-
-  if (
-    playerState.status ===
-    "error"
-  ) {
-    return (
-      <LearnerMessage
-        title="Aktiviti belum dapat dimulakan"
-        message={
-          playerState.message
-        }
-      />
-    );
-  }
-
-
-  if (
-    playerState.status ===
-    "no-content"
-  ) {
-    return (
-      <LearnerMessage
-        title="Aktiviti sedang disediakan"
-        message={
-          `Belum ada aktiviti yang diluluskan untuk umur ${playerState.ageBand} dalam versi ini.`
-        }
-      />
-    );
-  }
-
 
   const runtimeActivity =
-    resolveRuntimeActivity(
-      playerState.activityId
+    useMemo(
+      () =>
+        resolveRuntimeActivity(
+          DEFAULT_ACTIVITY_ID
+        ),
+      []
     );
 
 
   if (!runtimeActivity) {
     return (
-      <LearnerMessage
-        title="Aktiviti belum tersedia"
-        message="Kandungan aktiviti tidak dapat dimuatkan."
-      />
+      <main className="mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center px-4 py-10">
+        <section className="w-full rounded-[2rem] bg-white p-6 text-center shadow-sm sm:p-8">
+          <p className="text-sm font-bold uppercase tracking-[0.2em] text-amber-700">
+            HIBEYA
+          </p>
+
+          <h1 className="mt-2 text-3xl font-bold text-slate-900">
+            Akal Budi
+          </h1>
+
+          <p className="mt-5 text-slate-600">
+            Aktiviti ini belum tersedia.
+          </p>
+        </section>
+      </main>
     );
   }
 
 
   return (
     <ResolvedActivityPlayer
-      key={
-        runtimeActivity
-          .catalogue
-          .id
-      }
       runtimeActivity={
         runtimeActivity
       }
-      network={
-        network
-      }
-      offlineProfile={
-        playerState
-          .offlineProfile
-      }
-      onContinue={
-        () =>
-          void continueJourney(
-            playerState
-          )
-      }
+      network={network}
     />
-  );
-}
-
-
-function LearnerMessage({
-  title,
-  message
-}: {
-  title: string;
-
-  message: string;
-}) {
-  return (
-    <main className="mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center px-4 py-10">
-      <section className="w-full rounded-[2rem] bg-white p-6 text-center shadow-sm sm:p-8">
-        <p className="text-sm font-bold uppercase tracking-[0.2em] text-amber-700">
-          HIBEYA
-        </p>
-
-        <h1 className="mt-2 text-3xl font-bold text-slate-900">
-          {title}
-        </h1>
-
-        <p className="mt-5 leading-7 text-slate-600">
-          {message}
-        </p>
-      </section>
-    </main>
   );
 }
 
@@ -431,29 +103,23 @@ interface ResolvedActivityPlayerProps {
     ReturnType<
       typeof useNetworkStatus
     >;
-
-  offlineProfile:
-    boolean;
-
-  onContinue:
-    () => void;
 }
 
 
 function ResolvedActivityPlayer({
   runtimeActivity,
-  network,
-  offlineProfile,
-  onContinue
+  network
 }: ResolvedActivityPlayerProps) {
   const activity =
     runtimeActivity
       .implementation
       .activity;
 
+
   const catalogue =
     runtimeActivity
       .catalogue;
+
 
   const mechanic =
     useMemo(
@@ -466,15 +132,15 @@ function ResolvedActivityPlayer({
       ]
     );
 
-  const [
-    context
-  ] =
+
+  const [context] =
     useState(
       () =>
         mechanic.start(
           activity
         )
     );
+
 
   const [
     sessionId,
@@ -484,6 +150,7 @@ function ResolvedActivityPlayer({
       () =>
         createSessionId()
     );
+
 
   const [
     answers,
@@ -495,6 +162,7 @@ function ResolvedActivityPlayer({
       >[]
     >([]);
 
+
   const [
     selectedId,
     setSelectedId
@@ -502,6 +170,7 @@ function ResolvedActivityPlayer({
     useState<
       string | null
     >(null);
+
 
   const [
     feedback,
@@ -511,11 +180,13 @@ function ResolvedActivityPlayer({
       string | null
     >(null);
 
+
   const [
     sessionInitialised,
     setSessionInitialised
   ] =
     useState(false);
+
 
   const [
     recoverySession,
@@ -525,6 +196,7 @@ function ResolvedActivityPlayer({
       StoredSession | null
     >(null);
 
+
   const [
     syncMessage,
     setSyncMessage
@@ -533,68 +205,56 @@ function ResolvedActivityPlayer({
       string | null
     >(null);
 
-  const [
-    completed,
-    setCompleted
-  ] =
-    useState(false);
 
-
-  useEffect(
-    () => {
-      void getLatestIncompleteSession()
-        .then(
-          (
-            session
-          ) => {
-            if (
-              session &&
-              session.activityId ===
-                activity.id
-            ) {
-              setRecoverySession(
-                session
-              );
-            }
-          }
-        );
-    },
-    [
-      activity.id
-    ]
-  );
-
-
-  useEffect(
-    () => {
-      if (
-        !network.online
-      ) {
-        return;
-      }
-
-
-      void processPendingSessions(
-        localSyncProvider
-      ).then(
+  useEffect(() => {
+    void getLatestIncompleteSession()
+      .then(
         (
-          result
+          session
         ) => {
           if (
-            result.attempted >
-            0
+            session &&
+            session.activityId ===
+              activity.id
           ) {
-            setSyncMessage(
-              `${result.succeeded} aktiviti diselaraskan`
+            setRecoverySession(
+              session
             );
           }
         }
       );
-    },
-    [
-      network.online
-    ]
-  );
+  }, [
+    activity.id
+  ]);
+
+
+  useEffect(() => {
+    if (
+      !network.online
+    ) {
+      return;
+    }
+
+
+    void processPendingSessions(
+      localSyncProvider
+    ).then(
+      (
+        result
+      ) => {
+        if (
+          result.attempted >
+          0
+        ) {
+          setSyncMessage(
+            `${result.succeeded} aktiviti diselaraskan`
+          );
+        }
+      }
+    );
+  }, [
+    network.online
+  ]);
 
 
   async function ensureSession() {
@@ -629,13 +289,6 @@ function ResolvedActivityPlayer({
   async function handleAnswer(
     optionId: string
   ) {
-    if (
-      completed
-    ) {
-      return;
-    }
-
-
     await ensureSession();
 
 
@@ -688,17 +341,8 @@ function ResolvedActivityPlayer({
       );
 
 
-      await recordCompletedJourneyActivity(
-        activity.id
-      );
-
-
       setRecoverySession(
         null
-      );
-
-      setCompleted(
-        true
       );
 
 
@@ -720,7 +364,6 @@ function ResolvedActivityPlayer({
           );
         }
       }
-
     } else {
       setFeedback(
         "Cuba lagi."
@@ -767,6 +410,7 @@ function ResolvedActivityPlayer({
         lastAnswer.optionId
       );
 
+
       setFeedback(
         lastAnswer.correct
           ? "Betul! Bagus."
@@ -798,10 +442,6 @@ function ResolvedActivityPlayer({
     setSessionInitialised(
       false
     );
-
-    setCompleted(
-      false
-    );
   }
 
 
@@ -828,17 +468,12 @@ function ResolvedActivityPlayer({
         )}
 
 
-        {offlineProfile && (
-          <div className="mt-3 inline-flex rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">
-            Profil umur disimpan pada peranti
-          </div>
-        )}
-
-
         {syncMessage &&
           network.online && (
             <div className="mt-3 inline-flex rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-800">
-              {syncMessage}
+              {
+                syncMessage
+              }
             </div>
           )}
       </header>
@@ -854,6 +489,7 @@ function ResolvedActivityPlayer({
             Sambung dari tempat terakhir atau mula semula.
           </p>
 
+
           <div className="mt-4 flex flex-col gap-3 sm:flex-row">
             <button
               type="button"
@@ -864,6 +500,7 @@ function ResolvedActivityPlayer({
             >
               Sambung
             </button>
+
 
             <button
               type="button"
@@ -889,6 +526,7 @@ function ResolvedActivityPlayer({
             }
           </p>
 
+
           <h2 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">
             {
               activity
@@ -896,6 +534,7 @@ function ResolvedActivityPlayer({
                 .ms
             }
           </h2>
+
 
           <p className="mt-3 text-lg text-slate-700 sm:text-xl">
             {
@@ -920,6 +559,7 @@ function ResolvedActivityPlayer({
                       option.asset
                     );
 
+
                   const isSelected =
                     selectedId ===
                     option.id;
@@ -931,9 +571,6 @@ function ResolvedActivityPlayer({
                         option.id
                       }
                       type="button"
-                      disabled={
-                        completed
-                      }
                       onClick={
                         () =>
                           void handleAnswer(
@@ -950,9 +587,6 @@ function ResolvedActivityPlayer({
                         "rounded-3xl border-2 px-4 py-6",
                         "transition duration-150 active:scale-95",
                         "focus:outline-none focus:ring-4 focus:ring-amber-200",
-                        completed
-                          ? "cursor-default opacity-80"
-                          : "",
                         isSelected
                           ? "border-amber-500 bg-amber-50"
                           : "border-slate-200 bg-slate-50 hover:border-amber-300"
@@ -960,33 +594,15 @@ function ResolvedActivityPlayer({
                         " "
                       )}
                     >
-                      {
-                        asset.type ===
-                        "image"
-                          ? (
-                            <img
-                              src={
-                                asset.value
-                              }
-                              alt=""
-                              aria-hidden="true"
-                              draggable={
-                                false
-                              }
-                              className="h-40 w-40 select-none object-contain sm:h-44 sm:w-44"
-                            />
-                          )
-                          : (
-                            <span
-                              aria-hidden="true"
-                              className="text-7xl sm:text-8xl"
-                            >
-                              {
-                                asset.value
-                              }
-                            </span>
-                          )
-                      }
+                      <span
+                        aria-hidden="true"
+                        className="text-7xl sm:text-8xl"
+                      >
+                        {
+                          asset
+                            .value
+                        }
+                      </span>
 
 
                       <span className="mt-4 text-base font-semibold text-slate-700">
@@ -1008,31 +624,10 @@ function ResolvedActivityPlayer({
           className="mt-7 min-h-10 text-center text-xl font-bold text-slate-800"
           aria-live="polite"
         >
-          {feedback}
+          {
+            feedback
+          }
         </div>
-
-
-        {completed && (
-          <section className="mt-4 rounded-3xl bg-emerald-50 p-5 text-center">
-            <p className="font-semibold text-emerald-900">
-              Aktiviti selesai.
-            </p>
-
-            <p className="mt-1 text-sm leading-6 text-emerald-800">
-              Bagus. Boleh berhenti di sini atau pilih aktiviti seterusnya.
-            </p>
-
-            <button
-              type="button"
-              onClick={
-                onContinue
-              }
-              className="mt-4 rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white"
-            >
-              Aktiviti seterusnya
-            </button>
-          </section>
-        )}
       </section>
     </main>
   );

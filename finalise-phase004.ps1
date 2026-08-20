@@ -1,3 +1,145 @@
+param(
+  [switch]$Commit
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+$repoRoot = (Get-Location).Path
+$playerPath = Join-Path $repoRoot "apps\learner-web\src\features\play\ActivityPlayer.tsx"
+$packagePath = Join-Path $repoRoot "apps\learner-web\package.json"
+$logsRoot = Join-Path $repoRoot "tools\dev\logs"
+$backupRoot = Join-Path $repoRoot "tools\dev\backups"
+
+New-Item -ItemType Directory -Force -Path $logsRoot | Out-Null
+New-Item -ItemType Directory -Force -Path $backupRoot | Out-Null
+
+function Write-Step {
+  param([string]$Message)
+  Write-Host ""
+  Write-Host "==> $Message" -ForegroundColor Cyan
+}
+
+function Write-Utf8NoBom {
+  param(
+    [Parameter(Mandatory)][string]$Path,
+    [Parameter(Mandatory)][AllowEmptyString()][string]$Content
+  )
+
+  [System.IO.File]::WriteAllText(
+    $Path,
+    $Content.TrimEnd() + "`n",
+    [System.Text.UTF8Encoding]::new($false)
+  )
+}
+
+function Backup-File {
+  param([string]$Path)
+
+  if (-not (Test-Path $Path)) {
+    return
+  }
+
+  $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+  $relative = $Path.Substring($repoRoot.Length).TrimStart('\')
+  $safe = $relative.Replace('\', '__')
+  Copy-Item $Path (Join-Path $backupRoot "$timestamp-$safe") -Force
+}
+
+function Invoke-Native {
+  param(
+    [Parameter(Mandatory)][string]$Name,
+    [Parameter(Mandatory)][string]$Command
+  )
+
+  Write-Step $Name
+
+  $timestamp = Get-Date -Format "yyyyMMdd-HHmmssfff"
+  $stdout = Join-Path $logsRoot "native-$timestamp-out.log"
+  $stderr = Join-Path $logsRoot "native-$timestamp-err.log"
+
+  $process = Start-Process `
+    -FilePath "cmd.exe" `
+    -ArgumentList @(
+      "/d",
+      "/s",
+      "/c",
+      $Command
+    ) `
+    -WorkingDirectory $repoRoot `
+    -RedirectStandardOutput $stdout `
+    -RedirectStandardError $stderr `
+    -NoNewWindow `
+    -Wait `
+    -PassThru
+
+  $outText = ""
+  $errText = ""
+
+  if (Test-Path $stdout) {
+    $outText = Get-Content $stdout -Raw
+    if ($outText) {
+      Write-Host $outText
+    }
+  }
+
+  if (Test-Path $stderr) {
+    $errText = Get-Content $stderr -Raw
+    if ($errText) {
+      Write-Host $errText
+    }
+  }
+
+  if ($process.ExitCode -ne 0) {
+    $diagnostic = Join-Path $logsRoot "FAILED-$timestamp-$($Name.Replace(' ','-')).log"
+
+    Write-Utf8NoBom `
+      -Path $diagnostic `
+      -Content @"
+COMMAND:
+$Command
+
+EXIT CODE:
+$($process.ExitCode)
+
+STDOUT:
+$outText
+
+STDERR:
+$errText
+"@
+
+    throw "$Name failed with exit code $($process.ExitCode). Diagnostic: $diagnostic"
+  }
+
+  Remove-Item $stdout,$stderr -Force -ErrorAction SilentlyContinue
+  Write-Host "PASS: $Name" -ForegroundColor Green
+}
+
+
+if (-not (Test-Path $playerPath)) {
+  throw "ActivityPlayer.tsx not found."
+}
+
+if (-not (Test-Path $packagePath)) {
+  throw "learner-web package.json not found."
+}
+
+
+Write-Host ""
+Write-Host "====================================================" -ForegroundColor Cyan
+Write-Host "HIBEYA AKAL BUDI - FINAL PHASE 004 INTEGRATION" -ForegroundColor Cyan
+Write-Host "====================================================" -ForegroundColor Cyan
+
+
+Write-Step "Backing up current files"
+Backup-File $playerPath
+Backup-File $packagePath
+
+
+Write-Step "Replacing ActivityPlayer.tsx as a whole"
+
+$player = @'
 import {
   useEffect,
   useMemo,
@@ -1037,3 +1179,110 @@ function ResolvedActivityPlayer({
     </main>
   );
 }
+
+'@
+
+Write-Utf8NoBom `
+  -Path $playerPath `
+  -Content $player
+
+
+Write-Step "Enabling the learner-web Vitest suite"
+
+$packageJson =
+  Get-Content $packagePath -Raw
+
+if (
+  $packageJson -match
+  '"test"\s*:\s*"echo \\"tests pending\\""'
+) {
+  $packageJson =
+    [regex]::Replace(
+      $packageJson,
+      '"test"\s*:\s*"echo \\"tests pending\\""',
+      '"test": "vitest run"'
+    )
+}
+elseif (
+  $packageJson -notmatch
+  '"test"\s*:'
+) {
+  throw "learner-web package.json has no test script. Stopped rather than rewriting package.json structure."
+}
+
+Write-Utf8NoBom `
+  -Path $packagePath `
+  -Content $packageJson
+
+
+Write-Step "Verifying required Phase 004 APIs exist"
+
+$requiredFiles = @(
+  "apps\learner-web\src\features\play\selectLearnerActivity.ts",
+  "packages\offline\src\learnerRuntimeProfile.repository.ts",
+  "packages\offline\src\learningJourney.repository.ts",
+  "supabase\migrations\20260820043100_learner_runtime_profile.sql"
+)
+
+foreach ($relative in $requiredFiles) {
+  $full = Join-Path $repoRoot $relative
+
+  if (-not (Test-Path $full)) {
+    throw "Missing required Phase 004 file: $relative"
+  }
+}
+
+
+Invoke-Native `
+  -Name "Typecheck" `
+  -Command "pnpm typecheck"
+
+Invoke-Native `
+  -Name "Learner web tests" `
+  -Command "pnpm --filter learner-web test"
+
+Invoke-Native `
+  -Name "All tests" `
+  -Command "pnpm test"
+
+Invoke-Native `
+  -Name "Production build" `
+  -Command "pnpm build"
+
+if (Test-Path (Join-Path $repoRoot ".env.security.local")) {
+  Invoke-Native `
+    -Name "RLS security regression" `
+    -Command "node --env-file=.env.security.local node_modules/vitest/vitest.mjs run tools/security-tests/rls.integration.test.ts --no-file-parallelism"
+}
+else {
+  Write-Host ""
+  Write-Host "Security regression skipped: .env.security.local not found." -ForegroundColor Yellow
+}
+
+Invoke-Native `
+  -Name "Supabase migration dry-run" `
+  -Command "pnpm supabase db push --dry-run"
+
+Invoke-Native `
+  -Name "Git whitespace check" `
+  -Command "git diff --check"
+
+
+if ($Commit) {
+  Invoke-Native `
+    -Name "Git stage" `
+    -Command "git add ."
+
+  Invoke-Native `
+    -Name "Git commit" `
+    -Command 'git commit -m "feat: complete age-aware offline learner journey"'
+}
+
+
+Write-Host ""
+Write-Host "====================================================" -ForegroundColor Green
+Write-Host "FINAL PHASE 004 INTEGRATION: PASS" -ForegroundColor Green
+Write-Host "====================================================" -ForegroundColor Green
+Write-Host ""
+Write-Host "The database migration is still dry-run only." -ForegroundColor Yellow
+Write-Host "Do not push it until the learner flow is verified in the browser." -ForegroundColor Yellow

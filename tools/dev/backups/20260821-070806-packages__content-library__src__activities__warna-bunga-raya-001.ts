@@ -4,11 +4,10 @@ import {
 } from "@akal-budi/content-schema";
 
 
-const activity:
-  ActivityContent =
+const activity =
 {
-  "id": "warna-merah-001",
-  "version": 2,
+  "id": "warna-bunga-raya-001",
+  "version": 1,
   "mechanic": "tap-choice",
   "ageBand": "3-4",
   "domains": [
@@ -20,44 +19,45 @@ const activity:
   ],
   "difficulty": 1,
   "title": {
-    "ms": "Cari Warna Merah",
-    "en": "Find the Red Colour"
+    "ms": "Mana Bunga Raya Merah?",
+    "en": "Which Hibiscus Is Red?"
   },
   "instruction": {
-    "ms": "Cari buah yang berwarna merah",
-    "en": "Find the fruit that is red"
+    "ms": "Cari bunga raya yang berwarna merah",
+    "en": "Find the hibiscus that is red"
   },
   "options": [
     {
-      "id": "apple-red",
-      "asset": "apple-red",
+      "id": "hibiscus-red",
+      "asset": "hibiscus-red",
       "correct": true
     },
     {
-      "id": "apple-green",
-      "asset": "apple-green",
+      "id": "hibiscus-yellow",
+      "asset": "hibiscus-yellow",
       "correct": false
     },
     {
-      "id": "banana-yellow",
-      "asset": "banana-yellow",
+      "id": "hibiscus-purple",
+      "asset": "hibiscus-purple",
       "correct": false
     }
   ],
   "development": {
     "objectiveIds": [
-      "visual-colour-recognition"
+      "visual-colour-recognition",
+      "local-environment-awareness"
     ],
     "rationale": {
-      "ms": "Aktiviti ini membantu kanak-kanak membezakan dan mengenal warna melalui pilihan visual yang mudah.",
-      "en": "This activity supports basic colour recognition and visual discrimination through simple visual choices."
+      "ms": "Aktiviti ini memberi peluang kepada kanak-kanak mengenal warna merah melalui bunga raya sebagai unsur tempatan yang dekat dengan identiti Malaysia.",
+      "en": "This activity gives children an opportunity to recognise red using the hibiscus as a locally relevant Malaysian element."
     },
     "interactionMode": "independent",
     "estimatedMinutes": 2,
     "parentParticipationRecommended": false,
     "offlineExtension": {
-      "ms": "Cari tiga benda berwarna merah di sekeliling bersama orang dewasa.",
-      "en": "Find three red objects around you with an adult."
+      "ms": "Jika ada tumbuhan berbunga berdekatan, lihat bersama orang dewasa dan berbual tentang warna bunganya.",
+      "en": "If there are flowering plants nearby, look at them with an adult and talk about their colours."
     },
     "researchRefs": [
       "AB-RESEARCH-EARLY-PLAY-001"
@@ -76,8 +76,10 @@ const activity:
     "penalisesMistakes": false
   },
   "malaysia": {
-    "relevance": "neutral",
-    "elements": [],
+    "relevance": "core",
+    "elements": [
+      "bunga raya"
+    ],
     "culturalReviewRequired": false
   },
   "accessibility": {
@@ -98,13 +100,14 @@ const activity:
     "reviewedAt": "2026-08-20T00:00:00.000Z"
   },
   "metadata": {
-    "estimatedSeconds": 120,
+    "estimatedSeconds": 90,
     "active": true
   }
-};
+}
+  satisfies ActivityContent;
 
 
-export const warnaMerah001 =
+export const warnaBungaRaya001 =
   ActivitySchema.parse(
     activity
   );
