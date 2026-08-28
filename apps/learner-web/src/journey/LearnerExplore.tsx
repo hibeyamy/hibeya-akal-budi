@@ -1,4 +1,11 @@
+import type {
+  ResolvedPlayableActivity
+} from "@akal-budi/content-library";
+
 export interface LearnerExploreProps {
+  activities:
+    readonly ResolvedPlayableActivity[];
+
   onBack:
     () => void;
 
@@ -10,6 +17,7 @@ export interface LearnerExploreProps {
 }
 
 export function LearnerExplore({
+  activities,
   onBack,
   onOpenActivity
 }: LearnerExploreProps) {
@@ -35,45 +43,53 @@ export function LearnerExplore({
         </button>
       </div>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        <button
-          type="button"
-          onClick={
-            () =>
-              onOpenActivity(
-                "warna-merah-001"
-              )
-          }
-          className="min-h-20 rounded-2xl border-2 border-rose-200 bg-rose-50 p-5 text-left focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-200"
-        >
-          <span className="block text-lg font-black text-slate-900">
-            Kenal warna merah
-          </span>
+      {
+        activities.length ===
+          0
+          ? (
+              <div
+                className="mt-6 rounded-2xl border-2 border-amber-200 bg-amber-50 p-5"
+                role="status"
+              >
+                <p className="text-lg font-black text-slate-900">
+                  Aktiviti untuk umur ini sedang disediakan
+                </p>
 
-          <span className="mt-1 block text-sm font-medium text-slate-600">
-            Aktiviti ringkas mengenal warna.
-          </span>
-        </button>
+                <p className="mt-2 text-sm font-medium leading-6 text-slate-600">
+                  Tiada aktiviti yang telah diluluskan untuk julat umur profil ini dalam versi semasa.
+                </p>
+              </div>
+            )
+          : (
+              <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                {
+                  activities.map(
+                    activity => (
+                      <button
+                        key={activity.id}
+                        type="button"
+                        onClick={
+                          () =>
+                            onOpenActivity(
+                              activity.id
+                            )
+                        }
+                        className="min-h-20 rounded-2xl border-2 border-emerald-200 bg-emerald-50 p-5 text-left focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+                      >
+                        <span className="block text-lg font-black text-slate-900">
+                          {activity.titleMs}
+                        </span>
 
-        <button
-          type="button"
-          onClick={
-            () =>
-              onOpenActivity(
-                "warna-bunga-raya-001"
-              )
-          }
-          className="min-h-20 rounded-2xl border-2 border-amber-200 bg-amber-50 p-5 text-left focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-200"
-        >
-          <span className="block text-lg font-black text-slate-900">
-            Warna bunga raya
-          </span>
-
-          <span className="mt-1 block text-sm font-medium text-slate-600">
-            Kenal warna melalui bunga raya.
-          </span>
-        </button>
-      </div>
+                        <span className="mt-1 block text-sm font-medium text-slate-600">
+                          Aktiviti yang sesuai untuk julat umur pembelajaran ini.
+                        </span>
+                      </button>
+                    )
+                  )
+                }
+              </div>
+            )
+      }
     </section>
   );
 }

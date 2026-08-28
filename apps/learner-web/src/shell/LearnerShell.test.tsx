@@ -25,7 +25,7 @@ describe(
               learnerName="Alya"
               progressPercent={35}
             >
-              <LearnerHome />
+              <LearnerHome contentAvailable={true} />
             </LearnerShell>
           );
 
@@ -48,7 +48,7 @@ describe(
       () => {
         const html =
           renderToStaticMarkup(
-            <LearnerHome />
+            <LearnerHome contentAvailable={true} />
           );
 
         expect(
@@ -66,12 +66,36 @@ describe(
     );
 
     it(
+      "does not expose Continue when no age-band content is approved",
+      () => {
+        const html =
+          renderToStaticMarkup(
+            <LearnerHome
+              contentAvailable={false}
+            />
+          );
+
+        expect(
+          html
+        ).not.toContain(
+          "Sambung belajar"
+        );
+
+        expect(
+          html
+        ).toContain(
+          "Aktiviti untuk umur ini sedang disediakan"
+        );
+      }
+    );
+
+    it(
       "includes an accessible skip link",
       () => {
         const html =
           renderToStaticMarkup(
             <LearnerShell>
-              <LearnerHome />
+              <LearnerHome contentAvailable={true} />
             </LearnerShell>
           );
 

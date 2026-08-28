@@ -12,6 +12,9 @@ export interface LearnerShellProps {
   progressPercent?:
     number;
 
+  progressAvailable?:
+    boolean;
+
   title?:
     string;
 
@@ -23,6 +26,7 @@ export function LearnerShell({
   children,
   learnerName = "Kawan kecil",
   progressPercent = 0,
+  progressAvailable = true,
   title = "Jom belajar!",
   subtitle = "Pilih aktiviti yang sesuai untuk hari ini."
 }: LearnerShellProps) {
@@ -34,6 +38,11 @@ export function LearnerShell({
         progressPercent
       )
     );
+
+  const progressLabel =
+    progressAvailable
+      ? `${Math.round(safeProgress)}%`
+      : "Belum tersedia";
 
   return (
     <div className="min-h-screen bg-amber-50 text-slate-800">
@@ -58,7 +67,11 @@ export function LearnerShell({
 
           <div
             className="min-w-32 sm:min-w-48"
-            aria-label={`Kemajuan ${Math.round(safeProgress)} peratus`}
+            aria-label={
+              progressAvailable
+                ? `Kemajuan ${Math.round(safeProgress)} peratus`
+                : "Kemajuan belum tersedia kerana tiada kandungan diluluskan untuk julat umur ini"
+            }
           >
             <div className="mb-1 flex items-center justify-between gap-3 text-xs font-semibold text-slate-600">
               <span>
@@ -66,7 +79,7 @@ export function LearnerShell({
               </span>
 
               <span>
-                {Math.round(safeProgress)}%
+                {progressLabel}
               </span>
             </div>
 
@@ -75,7 +88,9 @@ export function LearnerShell({
                 className="h-full rounded-full bg-amber-500 transition-[width] motion-reduce:transition-none"
                 style={{
                   width:
-                    `${safeProgress}%`
+                    progressAvailable
+                      ? `${safeProgress}%`
+                      : "0%"
                 }}
               />
             </div>

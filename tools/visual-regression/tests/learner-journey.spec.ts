@@ -256,7 +256,7 @@ test.describe(
           "button",
           {
             name:
-              /Kenal warna merah/
+              /Cari Warna Merah/
           }
         ).click();
 
@@ -293,7 +293,7 @@ test.describe(
           "button",
           {
             name:
-              /Warna bunga raya/
+              /Mana Bunga Raya Merah\\?/
           }
         ).click();
 

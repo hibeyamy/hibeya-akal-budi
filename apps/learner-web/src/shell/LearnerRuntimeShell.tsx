@@ -15,17 +15,22 @@ export interface LearnerRuntimeShellProps {
 
   progressPercent?:
     number;
+
+  progressAvailable?:
+    boolean;
 }
 
 export function LearnerRuntimeShell({
   children,
   learnerName,
-  progressPercent
+  progressPercent,
+  progressAvailable
 }: LearnerRuntimeShellProps) {
   return (
     <LearnerShell
       learnerName={learnerName}
       progressPercent={progressPercent}
+      progressAvailable={progressAvailable}
       title="Jom belajar!"
       subtitle="Pilih satu aktiviti dan belajar mengikut rentak sendiri."
     >

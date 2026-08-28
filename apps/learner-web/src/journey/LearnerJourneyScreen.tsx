@@ -43,6 +43,8 @@ export function LearnerJourneyScreen() {
 
   const {
     progressPercent,
+    progressAvailable,
+    playableActivities,
     refreshProgress
   } =
     useLearnerProgress();
@@ -52,6 +54,9 @@ export function LearnerJourneyScreen() {
       progressPercent={
         progressPercent
       }
+      progressAvailable={
+        progressAvailable
+      }
     >
       {
         state.view ===
@@ -59,6 +64,9 @@ export function LearnerJourneyScreen() {
           ? (
               <>
                 <LearnerHome
+                  contentAvailable={
+                    progressAvailable
+                  }
                   onContinue={
                     () =>
                       void openNextActivity()
@@ -67,14 +75,20 @@ export function LearnerJourneyScreen() {
                     goExplore
                   }
                 />
-                {selectionError ? (
-                  <p
-                    role="alert"
-                    className="mx-auto -mt-8 mb-8 max-w-3xl px-4 text-center font-semibold text-rose-700"
-                  >
-                    {selectionError}
-                  </p>
-                ) : null}
+
+                {
+                  selectionError &&
+                  progressAvailable
+                    ? (
+                        <p
+                          role="alert"
+                          className="mx-auto -mt-8 mb-8 max-w-3xl px-4 text-center font-semibold text-rose-700"
+                        >
+                          {selectionError}
+                        </p>
+                      )
+                    : null
+                }
               </>
             )
           : null
@@ -85,6 +99,9 @@ export function LearnerJourneyScreen() {
         "explore"
           ? (
               <LearnerExplore
+                activities={
+                  playableActivities
+                }
                 onBack={
                   goHome
                 }
