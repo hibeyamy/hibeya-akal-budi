@@ -34,7 +34,8 @@ export function LearnerJourneyScreen() {
     useLearnerJourney();
 
   const {
-    openNextActivity
+    openNextActivity,
+    selectionError
   } =
     useNextLearnerActivity({
       openActivity
@@ -56,15 +57,25 @@ export function LearnerJourneyScreen() {
         state.view ===
         "home"
           ? (
-              <LearnerHome
-                onContinue={
-                  () =>
-                    void openNextActivity()
-                }
-                onExplore={
-                  goExplore
-                }
-              />
+              <>
+                <LearnerHome
+                  onContinue={
+                    () =>
+                      void openNextActivity()
+                  }
+                  onExplore={
+                    goExplore
+                  }
+                />
+                {selectionError ? (
+                  <p
+                    role="alert"
+                    className="mx-auto -mt-8 mb-8 max-w-3xl px-4 text-center font-semibold text-rose-700"
+                  >
+                    {selectionError}
+                  </p>
+                ) : null}
+              </>
             )
           : null
       }

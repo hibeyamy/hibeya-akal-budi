@@ -1,5 +1,6 @@
 import {
-  useCallback
+  useCallback,
+  useState
 } from "react";
 
 import {
@@ -28,9 +29,16 @@ export interface UseNextLearnerActivityInput {
 export function useNextLearnerActivity({
   openActivity
 }: UseNextLearnerActivityInput) {
+  const [
+    selectionError,
+    setSelectionError
+  ] = useState<string | null>(null);
+
   const openNextActivity =
     useCallback(
       async () => {
+        setSelectionError(null);
+
         const [
           journey,
           profile,
@@ -43,6 +51,9 @@ export function useNextLearnerActivity({
           ]);
 
         if (!profile) {
+          setSelectionError(
+            "Profil pembelajaran belum tersedia. Muat semula halaman dan cuba lagi."
+          );
           return;
         }
 
@@ -76,6 +87,9 @@ export function useNextLearnerActivity({
           });
 
         if (!activity) {
+          setSelectionError(
+            "Tiada aktiviti seterusnya dapat dipilih. Gunakan Teroka sementara perjalanan pembelajaran disemak."
+          );
           return;
         }
 
@@ -90,6 +104,7 @@ export function useNextLearnerActivity({
     );
 
   return {
-    openNextActivity
+    openNextActivity,
+    selectionError
   };
 }

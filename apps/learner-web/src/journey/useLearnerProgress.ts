@@ -68,6 +68,24 @@ export function useLearnerProgress() {
   useEffect(
     () => {
       void refreshProgress();
+
+      const refreshOnFocus = () => {
+        void refreshProgress();
+      };
+
+      const refreshOnVisibility = () => {
+        if (document.visibilityState === "visible") {
+          void refreshProgress();
+        }
+      };
+
+      window.addEventListener("focus", refreshOnFocus);
+      document.addEventListener("visibilitychange", refreshOnVisibility);
+
+      return () => {
+        window.removeEventListener("focus", refreshOnFocus);
+        document.removeEventListener("visibilitychange", refreshOnVisibility);
+      };
     },
     [
       refreshProgress
