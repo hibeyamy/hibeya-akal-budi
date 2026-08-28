@@ -52,3 +52,5 @@ tools/dev/logs/
 apps/ui-storybook/storybook-static/
 tools/dev/backups/
 *.patch
+.vercel
+.env*

@@ -5,7 +5,9 @@ import {
 
 import {
   clearLearnerDevice,
-  getLearnerDevice
+  clearLearnerRuntimeProfile,
+  getLearnerDevice,
+  saveLearnerRuntimeProfile
 } from "@akal-budi/offline";
 
 import {
@@ -17,6 +19,7 @@ import {
 } from "./journey";
 
 import {
+  getLearnerRuntimeProfile,
   validateLearnerDevice
 } from "./services/deviceActivationService";
 
@@ -48,6 +51,8 @@ function App() {
 
 
     if (!device) {
+      await clearLearnerRuntimeProfile();
+
       setActivationState(
         "inactive"
       );
@@ -69,7 +74,10 @@ function App() {
         validation.childId !==
           device.childId
       ) {
-        await clearLearnerDevice();
+        await Promise.all([
+          clearLearnerDevice(),
+          clearLearnerRuntimeProfile()
+        ]);
 
         setActivationState(
           "inactive"
@@ -77,6 +85,47 @@ function App() {
 
         return;
       }
+
+
+
+
+      const profile =
+        await getLearnerRuntimeProfile(
+          device.deviceId,
+          device.deviceToken
+        );
+
+
+      if (
+        profile.childId !==
+        device.childId
+      ) {
+        await Promise.all([
+          clearLearnerDevice(),
+          clearLearnerRuntimeProfile()
+        ]);
+
+        setActivationState(
+          "inactive"
+        );
+
+        return;
+      }
+
+
+      await saveLearnerRuntimeProfile({
+        childId:
+          profile.childId,
+
+        ageBand:
+          profile.ageBand,
+
+        preferredLanguage:
+          profile.preferredLanguage,
+
+        validatedAt:
+          Date.now()
+      });
 
 
       setActivationState(

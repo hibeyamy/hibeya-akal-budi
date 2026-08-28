@@ -113,6 +113,51 @@ export function ProgressDashboard({
     selectedChildId
   ]);
 
+  useEffect(() => {
+    if (!selectedChildId) {
+      return;
+    }
+
+
+    const refresh =
+      () => {
+        if (
+          document.visibilityState ===
+          "visible"
+        ) {
+          void loadProgress(
+            selectedChildId
+          );
+        }
+      };
+
+
+    document.addEventListener(
+      "visibilitychange",
+      refresh
+    );
+
+    window.addEventListener(
+      "focus",
+      refresh
+    );
+
+
+    return () => {
+      document.removeEventListener(
+        "visibilitychange",
+        refresh
+      );
+
+      window.removeEventListener(
+        "focus",
+        refresh
+      );
+    };
+  }, [
+    selectedChildId
+  ]);
+
 
   async function loadProgress(
     childId: string
@@ -208,6 +253,24 @@ export function ProgressDashboard({
           <label className="block text-sm font-semibold text-slate-700">
             Profil anak
           </label>
+
+
+          <button
+            type="button"
+            disabled={
+              loading ||
+              !selectedChildId
+            }
+            onClick={
+              () =>
+                void loadProgress(
+                  selectedChildId
+                )
+            }
+            className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 disabled:opacity-50"
+          >
+            Muat semula kemajuan
+          </button>
 
           <select
             value={

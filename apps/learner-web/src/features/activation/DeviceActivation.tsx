@@ -3,11 +3,13 @@ import {
 } from "react";
 
 import {
-  saveLearnerDevice
+  saveLearnerDevice,
+  saveLearnerRuntimeProfile
 } from "@akal-budi/offline";
 
 import {
-  exchangeActivationCode
+  exchangeActivationCode,
+  getLearnerRuntimeProfile
 } from "../../services/deviceActivationService";
 
 interface DeviceActivationProps {
@@ -73,6 +75,38 @@ export function DeviceActivation({
           deviceName.trim() ||
           null
       });
+
+      const profile =
+        await getLearnerRuntimeProfile(
+          result.deviceId,
+          result.deviceToken
+        );
+
+
+      if (
+        profile.childId !==
+        result.childId
+      ) {
+        throw new Error(
+          "Identiti profil pembelajaran tidak sepadan."
+        );
+      }
+
+
+      await saveLearnerRuntimeProfile({
+        childId:
+          profile.childId,
+
+        ageBand:
+          profile.ageBand,
+
+        preferredLanguage:
+          profile.preferredLanguage,
+
+        validatedAt:
+          Date.now()
+      });
+
 
       onActivated();
     } catch (error) {
