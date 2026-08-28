@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "learner-core-fruit",
+  "version": "1.0.0",
+  "title": "Learner Core Fruit",
+  "purpose": "Approved Phase 007D fixtures for validating scalable family infrastructure.",
+  "commercialReleaseRequiresHumanApproval": true,
+  "members": [
+    {
+      "id": "apple-red",
+      "master": "assets/masters/apple-red.svg",
+      "export": "assets/exports/apple-red.svg",
+      "runtime": "packages/assets/src/generated/apple-red.svg"
+    },
+    {
+      "id": "apple-green",
+      "master": "assets/masters/apple-green.svg",
+      "export": "assets/exports/apple-green.svg",
+      "runtime": "packages/assets/src/generated/apple-green.svg"
+    },
+    {
+      "id": "banana-yellow",
+      "master": "assets/masters/banana-yellow.svg",
+      "export": "assets/exports/banana-yellow.svg",
+      "runtime": "packages/assets/src/generated/banana-yellow.svg"
+    }
+  ]
+}

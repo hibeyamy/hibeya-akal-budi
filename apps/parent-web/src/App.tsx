@@ -731,7 +731,7 @@ function App() {
                 </a>
               ) : (
                 <p className="mt-2 text-sm text-amber-800">
-                  Versi pembangunan â€” notis undang-undang produksi belum diterbitkan.
+                  Versi pembangunan — notis undang-undang produksi belum diterbitkan.
                 </p>
               )}
             </div>
@@ -848,19 +848,19 @@ function App() {
           className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3"
         >
           <option value="2-3">
-            2â€“3 tahun
+            2–3 tahun
           </option>
 
           <option value="3-4">
-            3â€“4 tahun
+            3–4 tahun
           </option>
 
           <option value="4-5">
-            4â€“5 tahun
+            4–5 tahun
           </option>
 
           <option value="5-6">
-            5â€“6 tahun
+            5–6 tahun
           </option>
         </select>
 

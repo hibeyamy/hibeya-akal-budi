@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "assetId": "replace-me",
+  "curriculumPurpose": "replace-me",
+  "ageBands": ["4-5"],
+  "subject": "replace-me",
+  "interactionRole": "learning-object",
+  "malaysianContext": [],
+  "culturalReviewRequired": false,
+  "variants": ["default"],
+  "masterFormat": "svg",
+  "runtimeFormats": ["svg", "webp"],
+  "status": "draft"
+}

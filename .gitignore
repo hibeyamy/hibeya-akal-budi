@@ -43,17 +43,12 @@ test-results/
 
 # TypeScript
 *.tsbuildinfo
-# HIBEYA local development artefacts
-tools/dev/backups/
-tools/dev/logs/
 
-# One-off migration/repair installers generated during development
-/phase*.ps1
-/repair-phase*.ps1
-/finalise-phase*.ps1
-/reconcile-phase*.ps1
-/run-phase*.cmd
-/run-repair-phase*.cmd
-/run-finalise-phase*.cmd
-/run-reconcile-phase*.cmd
-/*.bak
+# Local deployment and evidence state
+.env.local
+.env.*.local
+.vercel/
+tools/dev/logs/
+apps/ui-storybook/storybook-static/
+tools/dev/backups/
+*.patch

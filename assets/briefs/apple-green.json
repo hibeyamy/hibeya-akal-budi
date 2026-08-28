@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "assetId": "apple-green",
+  "curriculumPurpose": "Replace prototype apple-green with an original HIBEYA production asset.",
+  "ageBands": [
+    "4-5",
+    "6-7"
+  ],
+  "subject": "apple green",
+  "interactionRole": "learning-object",
+  "visualBrief": {
+    "description": "Original child-readable HIBEYA illustration of apple green, designed as a clear learning object.",
+    "composition": "Single dominant object with strong silhouette and generous negative space.",
+    "background": "transparent",
+    "avoid": [
+      "text",
+      "logos",
+      "watermarks",
+      "protected characters",
+      "celebrity likenesses",
+      "photorealistic clutter",
+      "unnecessary decorative detail"
+    ]
+  },
+  "malaysianContext": [],
+  "culturalReviewRequired": false,
+  "variants": [
+    "default"
+  ],
+  "masterFormat": "svg",
+  "runtimeFormats": [
+    "svg",
+    "webp"
+  ],
+  "productionMethod": "original-internal",
+  "status": "production"
+}

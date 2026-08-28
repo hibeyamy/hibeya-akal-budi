@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "system": "hibeya-akal-budi-illustration",
+  "principles": [
+    "child-readable",
+    "calm-not-overstimulating",
+    "malaysian-contextual",
+    "originality-first",
+    "accessible",
+    "age-aware",
+    "curriculum-extensible"
+  ],
+  "ageBands": {
+    "4-5": {
+      "detail": "low",
+      "shapeComplexity": "simple",
+      "backgroundDensity": "minimal",
+      "primaryObjectCount": [1, 4],
+      "touchTargetPx": 56
+    },
+    "6-7": {
+      "detail": "medium-low",
+      "shapeComplexity": "simple-to-moderate",
+      "backgroundDensity": "light",
+      "primaryObjectCount": [1, 6],
+      "touchTargetPx": 52
+    },
+    "8-9": {
+      "detail": "medium",
+      "shapeComplexity": "moderate",
+      "backgroundDensity": "moderate",
+      "primaryObjectCount": [1, 8],
+      "touchTargetPx": 48
+    }
+  },
+  "geometry": {
+    "cornerLanguage": "soft-rounded",
+    "outline": "consistent-friendly",
+    "silhouettePriority": true,
+    "microDetail": "restricted",
+    "minimumSeparationPx": 8
+  },
+  "characters": {
+    "humanDiversity": "malaysian-inclusive",
+    "expression": "clear-positive-neutral",
+    "bodyLanguage": "readable",
+    "stereotypesForbidden": true,
+    "protectedCharactersForbidden": true,
+    "celebrityLikenessForbidden": true
+  },
+  "culture": {
+    "malaysianElementsAllowed": true,
+    "contextualAccuracyRequired": true,
+    "religiousElementsRequireReview": true,
+    "traditionalScriptsRequireSourceValidation": true,
+    "avoidTokenism": true
+  },
+  "learning": {
+    "decorativeCompetitionWithTask": "forbidden",
+    "correctAnswerMustNotBeVisuallyLeaked": true,
+    "instructionalHierarchyRequired": true,
+    "colourOnlyMeaningForbidden": true
+  },
+  "production": {
+    "preferredMaster": "svg",
+    "runtimeFormats": ["svg", "webp", "png"],
+    "transparentBackgroundPreferredForObjects": true,
+    "rasterScaleFactors": [1, 2],
+    "naming": "<asset-id>--<variant>--v<major>",
+    "manifestRequired": true
+  }
+}

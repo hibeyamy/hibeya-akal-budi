@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "skills": [
+    {
+      "id": "colour-recognition",
+      "label": {
+        "ms": "Pengecaman warna",
+        "en": "Colour recognition"
+      },
+      "description": {
+        "ms": "Mengenal dan membezakan warna yang dipersembahkan secara visual.",
+        "en": "Recognise and distinguish visually presented colours."
+      },
+      "domain": "visual-cognition",
+      "active": true
+    },
+    {
+      "id": "visual-discrimination",
+      "label": {
+        "ms": "Diskriminasi visual",
+        "en": "Visual discrimination"
+      },
+      "description": {
+        "ms": "Membezakan ciri visual antara beberapa pilihan.",
+        "en": "Distinguish visual features between choices."
+      },
+      "domain": "visual-cognition",
+      "active": true
+    },
+    {
+      "id": "early-numeracy",
+      "label": {
+        "ms": "Diskriminasi visual",
+        "en": "Visual discrimination"
+      },
+      "description": {
+        "ms": "Mengenal dan membanding kuantiti kecil melalui kumpulan visual konkrit.",
+        "en": "Recognise and compare small quantities through concrete visual groups."
+      },
+      "domain": "visual-cognition",
+      "active": true
+    }
+  ],
+  "prerequisites": []
+}

@@ -1,6 +1,7 @@
 import {
   useEffect,
   useMemo,
+  useRef,
   useState
 } from "react";
 
@@ -16,8 +17,9 @@ import {
   addLocalAnswer,
   completeLocalSession,
   createLocalSession,
+  deleteLocalSession,
   getCachedLearnerRuntimeProfile,
-  getLatestIncompleteSession,
+  getLatestIncompleteSessionForActivity,
   getLearnerDevice,
   getLearnerJourneyState,
   processPendingSessions,
@@ -40,6 +42,11 @@ import {
 } from "../../services/localSyncProvider";
 
 import {
+  getLearnerSkillProgress,
+  recordSessionSkillMastery
+} from "../../services/skillMasteryService";
+
+import {
   resolveRuntimeActivity
 } from "./resolvePlayableActivity";
 
@@ -59,6 +66,9 @@ type ReadyPlayerState = {
     "ready";
 
   activityId:
+    string;
+
+  childId:
     string;
 
   ageBand:
@@ -182,6 +192,7 @@ export function ActivityPlayer() {
 
 
         await selectActivityForProfile(
+          profile.childId,
           profile.ageBand,
           false
         );
@@ -241,6 +252,7 @@ export function ActivityPlayer() {
 
 
     await selectActivityForProfile(
+      cachedProfile.childId,
       cachedProfile.ageBand,
       true
     );
@@ -248,22 +260,52 @@ export function ActivityPlayer() {
 
 
   async function selectActivityForProfile(
+    childId:
+      string,
+
     ageBand:
       LearnerAgeBand,
 
     offlineProfile:
       boolean
   ) {
-    const journey =
-      await getLearnerJourneyState();
+    const [
+      journey,
+      skillProgress
+    ] =
+      await Promise.all([
+        getLearnerJourneyState(),
+        getLearnerSkillProgress()
+      ]);
+
+    const masteredSkillIds =
+      skillProgress
+        .filter(
+          skill =>
+            skill.level ===
+              "mastered"
+        )
+        .map(
+          skill =>
+            skill.skillId
+        );
 
 
     const selected =
       selectLearnerActivity({
+        childId,
+
         ageBand,
 
         lastCompletedActivityId:
-          journey.lastCompletedActivityId
+          journey.lastCompletedActivityId,
+
+        completedActivityIds:
+          journey.completedActivityIds,
+
+        masteredSkillIds,
+
+        skillProgress
       });
 
 
@@ -286,6 +328,8 @@ export function ActivityPlayer() {
       activityId:
         selected.id,
 
+      childId,
+
       ageBand,
 
       offlineProfile
@@ -298,6 +342,7 @@ export function ActivityPlayer() {
       ReadyPlayerState
   ) {
     await selectActivityForProfile(
+      state.childId,
       state.ageBand,
       state.offlineProfile
     );
@@ -391,6 +436,44 @@ export function ActivityPlayer() {
 }
 
 
+export interface ActivityPlayerAdapterProps {
+  activityId: string;
+  onComplete?: () => void;
+  onExit: () => void;
+}
+
+export function ActivityPlayerAdapter({
+  activityId,
+  onComplete,
+  onExit
+}: ActivityPlayerAdapterProps) {
+  const network = useNetworkStatus();
+  const runtimeActivity = resolveRuntimeActivity(activityId);
+
+  if (!runtimeActivity) {
+    return (
+      <LearnerMessage
+        title="Aktiviti belum tersedia"
+        message="Kandungan aktiviti tidak dapat dimuatkan."
+      />
+    );
+  }
+
+  return (
+    <ResolvedActivityPlayer
+      key={runtimeActivity.catalogue.id}
+      runtimeActivity={runtimeActivity}
+      network={network}
+      offlineProfile={false}
+      onContinue={onExit}
+      onComplete={onComplete}
+      onExit={onExit}
+      explicitJourneyMode={true}
+    />
+  );
+}
+
+
 function LearnerMessage({
   title,
   message
@@ -437,6 +520,15 @@ interface ResolvedActivityPlayerProps {
 
   onContinue:
     () => void;
+
+  onComplete?:
+    () => void;
+
+  onExit?:
+    () => void;
+
+  explicitJourneyMode?:
+    boolean;
 }
 
 
@@ -444,7 +536,10 @@ function ResolvedActivityPlayer({
   runtimeActivity,
   network,
   offlineProfile,
-  onContinue
+  onContinue,
+  onComplete,
+  onExit,
+  explicitJourneyMode = false
 }: ResolvedActivityPlayerProps) {
   const activity =
     runtimeActivity
@@ -483,6 +578,14 @@ function ResolvedActivityPlayer({
     useState<string>(
       () =>
         createSessionId()
+    );
+
+  const [
+    sessionStartedAt,
+    setSessionStartedAt
+  ] =
+    useState<number>(
+      context.startedAt
     );
 
   const [
@@ -526,6 +629,20 @@ function ResolvedActivityPlayer({
     >(null);
 
   const [
+    recoveryChecked,
+    setRecoveryChecked
+  ] =
+    useState(false);
+
+  const sessionCreationPromise =
+    useRef<Promise<void> | null>(
+      null
+    );
+
+  const answerInFlight =
+    useRef(false);
+
+  const [
     syncMessage,
     setSyncMessage
   ] =
@@ -542,25 +659,42 @@ function ResolvedActivityPlayer({
 
   useEffect(
     () => {
-      void getLatestIncompleteSession()
+      setRecoveryChecked(
+        false
+      );
+
+      void getLatestIncompleteSessionForActivity(
+        activity.id,
+        activity.version
+      )
         .then(
           (
             session
           ) => {
-            if (
-              session &&
-              session.activityId ===
-                activity.id
-            ) {
-              setRecoverySession(
-                session
-              );
-            }
+            setRecoverySession(
+              session ?? null
+            );
+            setRecoveryChecked(
+              true
+            );
+          }
+        )
+        .catch(
+          () => {
+            // Persisted recovery data is optional. If it cannot be
+            // read safely, start from a clean in-memory activity.
+            setRecoverySession(
+              null
+            );
+            setRecoveryChecked(
+              true
+            );
           }
         );
     },
     [
-      activity.id
+      activity.id,
+      activity.version
     ]
   );
 
@@ -604,25 +738,43 @@ function ResolvedActivityPlayer({
       return;
     }
 
+    if (
+      sessionCreationPromise.current
+    ) {
+      await sessionCreationPromise.current;
+      return;
+    }
 
-    await createLocalSession({
-      id:
-        sessionId,
+    const creation =
+      createLocalSession({
+        id:
+          sessionId,
 
-      activityId:
-        activity.id,
+        activityId:
+          activity.id,
 
-      activityVersion:
-        activity.version,
+        activityVersion:
+          activity.version,
 
-      startedAt:
-        context.startedAt
-    });
+        startedAt:
+          sessionStartedAt
+      }).then(
+        () => {
+          setSessionInitialised(
+            true
+          );
+        }
+      );
 
+    sessionCreationPromise.current =
+      creation;
 
-    setSessionInitialised(
-      true
-    );
+    try {
+      await creation;
+    } finally {
+      sessionCreationPromise.current =
+        null;
+    }
   }
 
 
@@ -630,13 +782,19 @@ function ResolvedActivityPlayer({
     optionId: string
   ) {
     if (
-      completed
+      completed ||
+      recoverySession ||
+      !recoveryChecked ||
+      answerInFlight.current
     ) {
       return;
     }
 
+    answerInFlight.current =
+      true;
 
-    await ensureSession();
+    try {
+      await ensureSession();
 
 
     const answer =
@@ -677,7 +835,11 @@ function ResolvedActivityPlayer({
 
       const result =
         mechanic.complete(
-          context,
+          {
+            ...context,
+            startedAt:
+              sessionStartedAt
+          },
           nextAnswers
         );
 
@@ -688,9 +850,21 @@ function ResolvedActivityPlayer({
       );
 
 
+      await recordSessionSkillMastery({
+        sessionId,
+        result,
+        skillMappings:
+          catalogue.skillMappings
+      });
+
+
       await recordCompletedJourneyActivity(
-        activity.id
+        activity.id,
+        sessionId
       );
+
+
+      onComplete?.();
 
 
       setRecoverySession(
@@ -726,6 +900,10 @@ function ResolvedActivityPlayer({
         "Cuba lagi."
       );
     }
+    } finally {
+      answerInFlight.current =
+        false;
+    }
   }
 
 
@@ -745,8 +923,15 @@ function ResolvedActivityPlayer({
       recoverySession.answers
     );
 
+    sessionCreationPromise.current =
+      null;
+
     setSessionInitialised(
       true
+    );
+
+    setSessionStartedAt(
+      recoverySession.startedAt
     );
 
     setRecoverySession(
@@ -776,13 +961,26 @@ function ResolvedActivityPlayer({
   }
 
 
-  function startNewSession() {
+  async function startNewSession() {
+    const previousSession =
+      recoverySession;
+
+    if (previousSession) {
+      await deleteLocalSession(
+        previousSession.id
+      );
+    }
+
     setRecoverySession(
       null
     );
 
     setSessionId(
       createSessionId()
+    );
+
+    setSessionStartedAt(
+      Date.now()
     );
 
     setAnswers([]);
@@ -795,6 +993,9 @@ function ResolvedActivityPlayer({
       null
     );
 
+    sessionCreationPromise.current =
+      null;
+
     setSessionInitialised(
       false
     );
@@ -806,8 +1007,30 @@ function ResolvedActivityPlayer({
 
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-3xl flex-col px-4 py-6 sm:px-6 sm:py-10">
+    <section
+      className="mx-auto flex min-h-screen max-w-3xl flex-col px-4 py-6 sm:px-6 sm:py-10"
+      data-testid="activity-player"
+      data-activity-id={activity.id}
+      data-activity-state={
+        completed
+          ? "completed"
+          : answers.length > 0
+            ? "retry"
+            : "idle"
+      }
+      data-answer-count={answers.length}
+    >
       <header className="mb-8">
+        {explicitJourneyMode && onExit && (
+          <button
+            type="button"
+            onClick={onExit}
+            className="mb-5 min-h-14 rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-extrabold text-slate-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-200"
+          >
+            Keluar aktiviti
+          </button>
+        )}
+
         <p className="text-sm font-bold uppercase tracking-[0.2em] text-amber-700">
           HIBEYA
         </p>
@@ -868,7 +1091,8 @@ function ResolvedActivityPlayer({
             <button
               type="button"
               onClick={
-                startNewSession
+                () =>
+                  void startNewSession()
               }
               className="rounded-2xl border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-700"
             >
@@ -879,8 +1103,17 @@ function ResolvedActivityPlayer({
       )}
 
 
-      <section className="rounded-[2rem] bg-white p-5 shadow-sm sm:p-8">
+      <section
+        className="rounded-[2rem] border border-amber-100 bg-white p-5 shadow-sm sm:p-8"
+        data-testid="learner-activity-card"
+      >
         <div className="mb-7 text-center">
+          <span
+            aria-hidden="true"
+            className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-2xl"
+          >
+            ★
+          </span>
           <p className="text-sm font-semibold text-amber-700">
             {
               catalogue
@@ -897,7 +1130,7 @@ function ResolvedActivityPlayer({
             }
           </h2>
 
-          <p className="mt-3 text-lg text-slate-700 sm:text-xl">
+          <p className="mx-auto mt-3 max-w-xl text-lg font-semibold leading-relaxed text-slate-700 sm:text-xl">
             {
               activity
                 .instruction
@@ -924,6 +1157,24 @@ function ResolvedActivityPlayer({
                     selectedId ===
                     option.id;
 
+                  const selectedAnswer =
+                    isSelected
+                      ? answers.at(-1)
+                      : null;
+
+                  const selectedState =
+                    selectedAnswer
+                      ? (
+                          selectedAnswer.correct
+                            ? "correct"
+                            : "incorrect"
+                        )
+                      : (
+                          isSelected
+                            ? "selected"
+                            : "idle"
+                        );
+
 
                   return (
                     <button
@@ -931,8 +1182,22 @@ function ResolvedActivityPlayer({
                         option.id
                       }
                       type="button"
+                      data-testid="learner-choice"
+                      data-option-id={
+                        option.id
+                      }
+                      data-asset-id={
+                        option.asset
+                      }
+                      data-visual-state={
+                        selectedState
+                      }
                       disabled={
-                        completed
+                        completed ||
+                        !recoveryChecked ||
+                        Boolean(
+                          recoverySession
+                        )
                       }
                       onClick={
                         () =>
@@ -945,51 +1210,94 @@ function ResolvedActivityPlayer({
                           .alt
                           .ms
                       }
+                      aria-pressed={
+                        isSelected
+                      }
                       className={[
-                        "flex min-h-40 touch-manipulation flex-col items-center justify-center",
-                        "rounded-3xl border-2 px-4 py-6",
-                        "transition duration-150 active:scale-95",
-                        "focus:outline-none focus:ring-4 focus:ring-amber-200",
+                        "relative flex min-h-40 touch-manipulation flex-col items-center justify-center",
+                        "rounded-3xl border-2 px-4 py-6 shadow-sm",
+                        "transition duration-150 active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100",
+                        "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-200",
                         completed
                           ? "cursor-default opacity-80"
                           : "",
-                        isSelected
-                          ? "border-amber-500 bg-amber-50"
-                          : "border-slate-200 bg-slate-50 hover:border-amber-300"
+                        selectedState === "correct"
+                          ? "border-emerald-500 bg-emerald-50 shadow-md"
+                          : selectedState === "incorrect"
+                            ? "border-rose-500 bg-rose-50 shadow-md"
+                            : selectedState === "selected"
+                              ? "border-amber-500 bg-amber-50 shadow-md"
+                              : "border-slate-200 bg-slate-50 hover:border-amber-300 hover:bg-amber-50/40"
                       ].join(
                         " "
                       )}
                     >
-                      {
-                        asset.type ===
-                        "image"
-                          ? (
-                            <img
-                              src={
-                                asset.value
-                              }
-                              alt=""
-                              aria-hidden="true"
-                              draggable={
-                                false
-                              }
-                              className="h-40 w-40 select-none object-contain sm:h-44 sm:w-44"
-                            />
-                          )
-                          : (
-                            <span
-                              aria-hidden="true"
-                              className="text-7xl sm:text-8xl"
-                            >
-                              {
-                                asset.value
-                              }
-                            </span>
-                          )
-                      }
+                      {selectedState !== "idle" && (
+                        <span
+                          aria-hidden="true"
+                          data-testid="learner-choice-state-icon"
+                          className={[
+                            "absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full border-2 bg-white text-xl font-black shadow-sm",
+                            selectedState === "correct"
+                              ? "border-emerald-500 text-emerald-700"
+                              : selectedState === "incorrect"
+                                ? "border-rose-500 text-rose-700"
+                                : "border-amber-500 text-amber-700"
+                          ].join(" ")}
+                        >
+                          {
+                            selectedState === "correct"
+                              ? "✓"
+                              : selectedState === "incorrect"
+                                ? "×"
+                                : "●"
+                          }
+                        </span>
+                      )}
+
+                      <span
+                        className="flex h-40 w-40 items-center justify-center overflow-hidden sm:h-44 sm:w-44"
+                        data-testid="learner-choice-visual"
+                      >
+                        {
+                          asset.type ===
+                          "image"
+                            ? (
+                              <img
+                                src={asset.value}
+                                alt=""
+                                aria-hidden="true"
+                                draggable={false}
+                                data-production-asset={option.asset}
+                                className="h-full w-full select-none object-contain"
+                              />
+                            )
+                            : asset.type ===
+                              "quantity"
+                              ? (
+                                <span
+                                  aria-hidden="true"
+                                  data-quantity-asset={option.asset}
+                                  className="grid grid-cols-2 place-items-center gap-1"
+                                >
+                                  {Array.from({ length: asset.count ?? 0 }).map((_, index) => {
+                                    const item = getAsset(asset.itemAsset ?? "");
+                                    return item.type === "image"
+                                      ? <img key={index} src={item.value} alt="" draggable={false} className="h-16 w-16 select-none object-contain sm:h-20 sm:w-20" />
+                                      : <span key={index} className="text-5xl">{item.value}</span>;
+                                  })}
+                                </span>
+                              )
+                              : (
+                                <span aria-hidden="true" data-fallback-asset={option.asset} className="text-7xl sm:text-8xl">
+                                  {asset.value}
+                                </span>
+                              )
+                        }
+                      </span>
 
 
-                      <span className="mt-4 text-base font-semibold text-slate-700">
+                      <span className="mt-4 text-lg font-extrabold leading-tight text-slate-800">
                         {
                           asset
                             .alt
@@ -1005,15 +1313,53 @@ function ResolvedActivityPlayer({
 
 
         <div
-          className="mt-7 min-h-10 text-center text-xl font-bold text-slate-800"
+          className={[
+            "mx-auto mt-7 flex min-h-14 max-w-md items-center justify-center rounded-2xl px-4 py-3 text-center text-xl font-extrabold",
+            feedback === "Betul! Bagus."
+              ? "bg-emerald-100 text-emerald-900"
+              : feedback === "Cuba lagi."
+                ? "bg-rose-100 text-rose-900"
+                : "text-slate-800"
+          ].join(" ")}
+          data-testid="learner-feedback"
+          data-feedback-state={
+            feedback === "Betul! Bagus."
+              ? "correct"
+              : feedback === "Cuba lagi."
+                ? "incorrect"
+                : "idle"
+          }
           aria-live="polite"
+          aria-atomic="true"
         >
-          {feedback}
+          {feedback && (
+            <span className="inline-flex items-center gap-2">
+              <span aria-hidden="true">
+                {
+                  feedback === "Betul! Bagus."
+                    ? "✓"
+                    : feedback === "Cuba lagi."
+                      ? "↻"
+                      : "●"
+                }
+              </span>
+              <span>{feedback}</span>
+            </span>
+          )}
         </div>
 
 
         {completed && (
-          <section className="mt-4 rounded-3xl bg-emerald-50 p-5 text-center">
+          <section
+            className="mt-4 rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-5 text-center"
+            data-testid="learner-completion"
+          >
+            <span
+              aria-hidden="true"
+              className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600 text-2xl font-black text-white"
+            >
+              ✓
+            </span>
             <p className="font-semibold text-emerald-900">
               Aktiviti selesai.
             </p>
@@ -1027,13 +1373,13 @@ function ResolvedActivityPlayer({
               onClick={
                 onContinue
               }
-              className="mt-4 rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white"
+              className="mt-4 min-h-14 touch-manipulation rounded-2xl bg-slate-900 px-6 py-3 font-extrabold text-white transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-300"
             >
               Aktiviti seterusnya
             </button>
           </section>
         )}
       </section>
-    </main>
+    </section>
   );
 }

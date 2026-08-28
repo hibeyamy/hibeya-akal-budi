@@ -1,0 +1,20 @@
+{
+  "id": "apple-red",
+  "stagedAt": "2026-08-25T23:03:33.317Z",
+  "state": "promoted-to-production",
+  "sourcePath": "packages/assets/source/review/fruit/apple-red.png",
+  "width": 1254,
+  "height": 1254,
+  "hasAlpha": false,
+  "semanticIdStable": true,
+  "productionEnabled": true,
+  "originalityReviewed": false,
+  "visualReviewed": true,
+  "notes": "Staging does not promote or publish the artwork.",
+  "visualReviewedAt": "2026-08-26T07:08:49.5265319+08:00",
+  "visualReviewMethod": "manual-local-review",
+  "promotedAt": "2026-08-25T23:26:55.455Z",
+  "masterPath": "packages/assets/source/masters/fruit/apple-red.png",
+  "deliveryPath": "packages/assets/src/generated/apple-red.webp",
+  "promotedSourceSha256": "BB35A0ADCCF449CF0701ED2C4C78428475640A1DE13B4D978C85DD3BB768926C"
+}

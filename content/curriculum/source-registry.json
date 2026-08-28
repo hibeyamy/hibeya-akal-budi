@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "authorities": [
+    {
+      "id": "kpm-my",
+      "name": "Kementerian Pendidikan Malaysia",
+      "countryCode": "MY",
+      "officialDomains": [
+        "moe.gov.my"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "kpm-kssr-bm-bi-tahap1-penjajaran-edisi3-2025",
+      "authorityId": "kpm-my",
+      "title": "Surat Siaran KPM Bil. 1 Tahun 2025: Pelaksanaan Dokumen Penjajaran Kurikulum Standard Sekolah Rendah (Semakan 2017) Edisi 3 Bagi Mata Pelajaran Bahasa Melayu Dan Bahasa Inggeris Tahap 1",
+      "sourceType": "official-web-page",
+      "sourceUrl": "https://www.moe.gov.my/surat-siaran-kpm-bil-1-tahun-2025-pelaksanaan-dokumen-penjajaran-kurikulum-standard-sekolah-rendah-semakan-2017",
+      "publicationDate": "2025-03-26",
+      "retrievedDate": "2026-08-21",
+      "verificationStatus": "metadata-verified",
+      "documentSha256": null,
+      "notes": "Official KPM page verified. Do not treat as a fully captured curriculum document until the linked document is locally captured and hashed."
+    },
+    {
+      "id": "kpm-kurikulum-persekolahan-2027",
+      "authorityId": "kpm-my",
+      "title": "Kurikulum Persekolahan 2027",
+      "sourceType": "official-web-page",
+      "sourceUrl": "https://www.moe.gov.my/kurikulum-persekolahan-2027",
+      "publicationDate": null,
+      "retrievedDate": "2026-08-21",
+      "verificationStatus": "metadata-verified",
+      "documentSha256": null,
+      "notes": "Official KPM page verified. Curriculum content is not copied into the repository."
+    },
+    {
+      "id": "kpm-jawi-bm-sjk-tahun4-2019",
+      "authorityId": "kpm-my",
+      "title": "Surat Siaran KPM Bil. 16 Tahun 2019: Pelaksanaan Pengenalan Tulisan Jawi Dalam Kurikulum Mata Pelajaran Bahasa Melayu Untuk Murid Tahun 4 Sekolah Jenis Kebangsaan Mulai Tahun 2020",
+      "sourceType": "official-document",
+      "sourceUrl": "https://www.moe.gov.my/storage/files/shares/pekeliling_dan_garis_panduan/surat_siaran/bahagian-pengurusan-sekolah-harian/SS%20Bil%2016%20Pelaksanaan%20Pengenalan%20Tulisan%20Jawi%20Dalam%20Kurikulum%20Mata%20Pelajaran%20Bahasa%20Melayu%20Tahun%202020.pdf?_t=1686283878",
+      "publicationDate": "2019-12-20",
+      "retrievedDate": "2026-08-21",
+      "verificationStatus": "metadata-verified",
+      "documentSha256": null,
+      "notes": "Official KPM document URL verified. Full content is not committed; a local capture must be hashed before document-level verification."
+    }
+  ]
+}

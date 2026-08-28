@@ -8,7 +8,9 @@ import {
 } from "vitest";
 
 import {
-  resetDatabaseForTests
+  resetDatabaseForTests,
+  getDatabase,
+  type StoredSession
 } from "../database";
 
 import {
@@ -20,6 +22,26 @@ import {
   processPendingSessions,
   type SessionSyncProvider
 } from "../sync";
+
+
+async function markSessionCompletedForSyncTest(
+  sessionId: string,
+  result: NonNullable<StoredSession["result"]>
+): Promise<void> {
+  const database = await getDatabase();
+  const session = await database.get("sessions", sessionId);
+
+  if (!session) {
+    throw new Error(`Sync test session not found: ${sessionId}`);
+  }
+
+  session.result = result;
+  session.completedAt = result.completedAt;
+  session.updatedAt = result.completedAt;
+  session.syncStatus = "pending";
+
+  await database.put("sessions", session);
+}
 
 
 describe(
@@ -48,6 +70,32 @@ describe(
           startedAt:
             1000
         });
+
+        await markSessionCompletedForSyncTest(
+          "sync-success",
+          {
+            activityId:
+              "warna-merah-001",
+
+            activityVersion:
+              1,
+
+            correct:
+              1,
+
+            incorrect:
+              0,
+
+            attempts:
+              1,
+
+            durationSeconds:
+              1,
+
+            completedAt:
+              2000
+          }
+        );
 
 
         const provider:
@@ -116,6 +164,32 @@ describe(
           startedAt:
             1000
         });
+
+        await markSessionCompletedForSyncTest(
+          "sync-failed",
+          {
+            activityId:
+              "warna-merah-001",
+
+            activityVersion:
+              1,
+
+            correct:
+              1,
+
+            incorrect:
+              0,
+
+            attempts:
+              1,
+
+            durationSeconds:
+              1,
+
+            completedAt:
+              2000
+          }
+        );
 
 
         const provider:
@@ -187,6 +261,32 @@ describe(
           startedAt:
             1000
         });
+
+        await markSessionCompletedForSyncTest(
+          "sync-exception",
+          {
+            activityId:
+              "warna-merah-001",
+
+            activityVersion:
+              1,
+
+            correct:
+              1,
+
+            incorrect:
+              0,
+
+            attempts:
+              1,
+
+            durationSeconds:
+              1,
+
+            completedAt:
+              2000
+          }
+        );
 
 
         const provider:

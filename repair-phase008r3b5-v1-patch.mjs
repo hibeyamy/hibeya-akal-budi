@@ -1,0 +1,14 @@
+import fs from "node:fs/promises";
+import path from "node:path";
+const file=path.join(process.cwd(),"apps/learner-web/src/features/play/ActivityPlayer.tsx");
+let s=await fs.readFile(file,"utf8");
+const marker='data-testid="activity-player"';
+const m=s.indexOf(marker);
+if(m<0) throw new Error("activity-player marker missing");
+const open=s.lastIndexOf("<main",m);
+if(open<0) throw new Error("ActivityPlayer main opening boundary missing");
+const close=s.indexOf("</main>",m);
+if(close<0) throw new Error("ActivityPlayer main closing boundary missing");
+s=s.slice(0,open)+"<section"+s.slice(open+5,close)+"</section>"+s.slice(close+7);
+await fs.writeFile(file,s,"utf8");
+console.log("PATCHED: ActivityPlayer nested main landmark changed to section");

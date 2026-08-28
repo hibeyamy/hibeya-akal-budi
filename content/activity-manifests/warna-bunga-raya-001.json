@@ -5,7 +5,9 @@
     "version": 1,
     "mechanic": "tap-choice",
     "ageBand": "3-4",
-    "domains": ["logic"],
+    "domains": [
+      "logic"
+    ],
     "skills": [
       "colour-recognition",
       "visual-discrimination"
@@ -100,10 +102,13 @@
   "catalogue": {
     "blueprintId": "warna-bunga-raya",
     "enabled": true,
-    "ageBands": ["3-4"],
+    "ageBands": [
+      "3-4"
+    ],
     "titleMs": "Mana Bunga Raya Merah?",
     "titleEn": "Which Hibiscus Is Red?",
-    "implementationKey": "colour-choice-v1"
+    "implementationKey": "colour-choice-v1",
+    "sequence": 10
   },
   "learningInsights": {
     "objectives": [
@@ -115,5 +120,18 @@
     "malaysiaElements": [
       "bunga raya"
     ]
-  }
+  },
+  "curriculumMappings": [],
+  "skillMappings": [
+    {
+      "skillId": "colour-recognition",
+      "role": "primary",
+      "weight": 1
+    },
+    {
+      "skillId": "visual-discrimination",
+      "role": "supporting",
+      "weight": 0.5
+    }
+  ]
 }

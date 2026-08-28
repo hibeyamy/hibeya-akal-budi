@@ -3,12 +3,178 @@ import path from "node:path";
 import process from "node:process";
 
 
-const [
-  ,
-  ,
-  activityId
-] =
-  process.argv;
+const rawArgs =
+  process.argv.slice(2);
+
+const activityId =
+  rawArgs[0];
+
+const optionArgs =
+  rawArgs.slice(1);
+
+const options = {};
+
+for (
+  let index = 0;
+  index < optionArgs.length;
+  index += 1
+) {
+  const token =
+    optionArgs[index];
+
+  if (
+    !token.startsWith("--")
+  ) {
+    console.error(
+      `Unexpected argument: ${token}`
+    );
+
+    process.exit(1);
+  }
+
+  const key =
+    token.slice(2);
+
+  const value =
+    optionArgs[index + 1];
+
+  if (
+    !value ||
+    value.startsWith("--")
+  ) {
+    console.error(
+      `Missing value for --${key}`
+    );
+
+    process.exit(1);
+  }
+
+  if (
+    Object.prototype.hasOwnProperty.call(
+      options,
+      key
+    )
+  ) {
+    console.error(
+      `Duplicate option: --${key}`
+    );
+
+    process.exit(1);
+  }
+
+  options[key] =
+    value;
+
+  index += 1;
+}
+
+const allowedOptions =
+  new Set([
+    "age-band",
+    "difficulty",
+    "primary-skill",
+    "sequence"
+  ]);
+
+for (
+  const key of
+    Object.keys(options)
+) {
+  if (
+    !allowedOptions.has(
+      key
+    )
+  ) {
+    console.error(
+      `Unknown option: --${key}`
+    );
+
+    process.exit(1);
+  }
+}
+
+const ageBand =
+  options["age-band"] ??
+    "3-4";
+
+if (
+  ![
+    "2-3",
+    "3-4",
+    "4-5",
+    "5-6"
+  ].includes(
+    ageBand
+  )
+) {
+  console.error(
+    `Invalid age band: ${ageBand}`
+  );
+
+  process.exit(1);
+}
+
+const difficulty =
+  options.difficulty ===
+    undefined
+    ? 1
+    : Number(
+        options.difficulty
+      );
+
+if (
+  !Number.isInteger(
+    difficulty
+  ) ||
+  difficulty < 1 ||
+  difficulty > 5
+) {
+  console.error(
+    "Difficulty must be an integer from 1 to 5."
+  );
+
+  process.exit(1);
+}
+
+const primarySkill =
+  options["primary-skill"] ??
+    "visual-discrimination";
+
+if (
+  !/^[a-z0-9-]+$/.test(
+    primarySkill
+  )
+) {
+  console.error(
+    `Invalid primary skill ID: ${primarySkill}`
+  );
+
+  process.exit(1);
+}
+
+const explicitSequence =
+  options.sequence ===
+    undefined
+    ? null
+    : Number(
+        options.sequence
+      );
+
+if (
+  explicitSequence !== null &&
+  (
+    !Number.isInteger(
+      explicitSequence
+    ) ||
+    explicitSequence < 1
+  )
+) {
+  console.error(
+    "Sequence must be a positive integer."
+  );
+
+  process.exit(1);
+}
 
 
 if (
@@ -18,7 +184,7 @@ if (
   )
 ) {
   console.error(
-    "Usage: node tools/content-compiler/new-activity.mjs <activity-id>"
+    "Usage: node tools/content-compiler/new-activity.mjs <activity-id> [--age-band 2-3|3-4|4-5|5-6] [--difficulty 1-5] [--primary-skill <skill-id>] [--sequence <positive-integer>]"
   );
 
   process.exit(1);
@@ -73,6 +239,62 @@ const exportName =
     );
 
 
+const manifestDirectory =
+  path.dirname(
+    target
+  );
+
+const existingSequences =
+  fs.existsSync(
+    manifestDirectory
+  )
+    ? fs.readdirSync(
+        manifestDirectory
+      )
+        .filter(
+          file =>
+            file.endsWith(
+              ".json"
+            )
+        )
+        .map(
+          file => {
+            try {
+              const existing =
+                JSON.parse(
+                  fs.readFileSync(
+                    path.join(
+                      manifestDirectory,
+                      file
+                    ),
+                    "utf8"
+                  )
+                );
+
+              return Number.isInteger(
+                existing.catalogue?.sequence
+              )
+                ? existing.catalogue.sequence
+                : 0;
+            }
+            catch {
+              return 0;
+            }
+          }
+        )
+    : [];
+
+const nextSequence =
+  (
+    existingSequences.length
+      ? Math.max(
+          ...existingSequences
+        )
+      : 0
+  ) +
+  10;
+
+
 const manifest = {
   exportName,
 
@@ -86,19 +308,17 @@ const manifest = {
     mechanic:
       "tap-choice",
 
-    ageBand:
-      "3-4",
+    ageBand,
 
     domains: [
       "logic"
     ],
 
     skills: [
-      "visual-discrimination"
+      primarySkill
     ],
 
-    difficulty:
-      1,
+    difficulty,
 
     title: {
       ms:
@@ -277,8 +497,12 @@ const manifest = {
     enabled:
       false,
 
+    sequence:
+      explicitSequence ??
+        nextSequence,
+
     ageBands: [
-      "3-4"
+      ageBand
     ],
 
     titleMs:
@@ -294,7 +518,23 @@ const manifest = {
   learningInsights: {
     objectives: [],
     malaysiaElements: []
-  }
+  },
+
+  curriculumMappings:
+    [],
+
+  skillMappings: [
+    {
+      skillId:
+        primarySkill,
+
+      role:
+        "primary",
+
+      weight:
+        1
+    }
+  ]
 };
 
 

@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "principles": {
+    "originalityFirst": true,
+    "commercialRightsRequired": true,
+    "provenanceRequired": true,
+    "childSafetyReviewRequired": true,
+    "culturalReviewRequiredWhenRelevant": true,
+    "noUntrackedStockAssets": true,
+    "noUnreviewedThirdPartyCharacters": true,
+    "noTrademarkImitation": true
+  },
+  "productionFormats": [
+    "svg",
+    "png",
+    "webp"
+  ],
+  "prototypeFormats": [
+    "emoji",
+    "svg",
+    "png",
+    "webp"
+  ],
+  "allowedSourceTypes": [
+    "original-internal",
+    "original-ai-assisted",
+    "commissioned-original",
+    "unicode-emoji",
+    "legacy-placeholder"
+  ],
+  "commercialSourceTypes": [
+    "original-internal",
+    "original-ai-assisted",
+    "commissioned-original"
+  ],
+  "requiredProductionChecks": [
+    "commercialRightsConfirmed",
+    "originalityReviewed",
+    "childSafetyReviewed"
+  ]
+}

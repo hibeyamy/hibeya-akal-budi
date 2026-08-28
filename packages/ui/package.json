@@ -1,0 +1,24 @@
+{
+    "version":  "0.0.0",
+    "peerDependencies":  {
+                             "react":  "^19.2.8",
+                             "react-dom":  "^19.2.8"
+                         },
+    "name":  "@akal-budi/ui",
+    "type":  "module",
+    "private":  true,
+    "scripts":  {
+                    "build":  "echo \"build source package\"",
+                    "typecheck":  "tsc --noEmit",
+                    "test":  "echo \"tests pending\""
+                },
+    "devDependencies":  {
+                            "typescript":  "~6.0.2",
+                            "@types/react":  "^19.2.17",
+                            "@types/react-dom":  "^19.2.3"
+                        },
+    "exports":  {
+                    "./styles.css":  "./src/styles.css",
+                    ".":  "./src/index.ts"
+                }
+}

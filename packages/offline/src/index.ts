@@ -1,5 +1,8 @@
 export type {
   StoredSession,
+  StoredAdaptiveObservation,
+  AdaptiveObservationAuthority,
+  AdaptiveObservationFallbackReason,
   SyncStatus,
   LearnerDeviceIdentity
 } from "./database";
@@ -27,8 +30,10 @@ export {
   addLocalAnswer,
   completeLocalSession,
   getLocalSession,
+  deleteLocalSession,
   getPendingSessions,
   getLatestIncompleteSession,
+  getLatestIncompleteSessionForActivity,
   markSessionSynced,
   markSessionFailed
 } from "./session.repository";
@@ -75,3 +80,37 @@ export {
 export type {
   LearnerJourneyState
 } from "./learningJourney.repository";
+export {
+  clearLearnerSkillMasteryState,
+  getLearnerSkillMasteryState,
+  saveLearnerSkillMasteryState
+} from "./skillMastery.repository";
+
+export type {
+  LearnerSkillMasteryState,
+  StoredSkillMasteryLevel,
+  StoredSkillMasteryRecord
+} from "./skillMastery.repository";
+
+
+
+export type {
+  QueueAdaptiveObservationInput
+} from "./adaptiveObservation.repository";
+
+export {
+  queueAdaptiveObservation,
+  getPendingAdaptiveObservations,
+  markAdaptiveObservationSynced,
+  getAdaptiveObservation,
+  isStoredAdaptiveObservation
+} from "./adaptiveObservation.repository";
+
+export type {
+  AdaptiveObservationSyncProvider,
+  AdaptiveObservationSyncResult
+} from "./sync";
+
+export {
+  processPendingAdaptiveObservations
+} from "./sync";

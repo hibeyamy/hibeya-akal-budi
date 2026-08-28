@@ -1,0 +1,86 @@
+.ab-ui-button {
+  min-height: var(--ab-touch-target-min, 44px);
+  border: 0;
+  border-radius: var(--ab-radius-lg);
+  padding: 0.75rem 1.25rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform var(--ab-motion-quick) var(--ab-motion-ease-standard),
+    background-color var(--ab-motion-gentle) var(--ab-motion-ease-standard);
+}
+
+.ab-ui-button:focus-visible {
+  outline: 4px solid var(--ab-focus-ring);
+  outline-offset: 3px;
+}
+
+.ab-ui-button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.ab-ui-button[data-variant="primary"] {
+  background: var(--ab-brand-ink);
+  color: var(--ab-text-inverse);
+}
+
+.ab-ui-button[data-variant="secondary"] {
+  border: 1px solid #cbd5e1;
+  background: var(--ab-surface-card);
+  color: var(--ab-text-primary);
+}
+
+.ab-ui-button[data-variant="gentle"] {
+  background: var(--ab-feedback-gentle-surface);
+  color: var(--ab-feedback-gentle-text);
+}
+
+.ab-ui-surface {
+  border-radius: var(--ab-radius-xl);
+  background: var(--ab-surface-card);
+  color: var(--ab-text-primary);
+}
+
+.ab-ui-surface[data-elevation="flat"] {
+  box-shadow: none;
+}
+
+.ab-ui-surface[data-elevation="raised"] {
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 0.06),
+    0 8px 24px rgb(15 23 42 / 0.06);
+}
+
+.ab-ui-feedback {
+  border-radius: var(--ab-radius-lg);
+  padding: var(--ab-space-md);
+}
+
+.ab-ui-feedback[data-tone="success"] {
+  background: var(--ab-feedback-success-surface);
+  color: var(--ab-feedback-success-text);
+}
+
+.ab-ui-feedback[data-tone="gentle"] {
+  background: var(--ab-feedback-gentle-surface);
+  color: var(--ab-feedback-gentle-text);
+}
+
+.ab-ui-feedback[data-tone="error"] {
+  background: var(--ab-feedback-error-surface);
+  color: var(--ab-feedback-error-text);
+}
+
+.ab-ui-audience-shell {
+  min-height: 100%;
+  background: var(--ab-surface-page);
+  color: var(--ab-text-primary);
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}

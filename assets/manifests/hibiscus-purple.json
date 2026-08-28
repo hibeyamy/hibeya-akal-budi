@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "id": "hibiscus-purple",
+  "status": "production",
+  "role": "learner-core",
+  "currentRepresentation": "png",
+  "sourceType": "original-ai-assisted",
+  "creator": "HIBEYA visual-production workflow",
+  "sourceFile": "assets/masters/hibiscus-purple.png",
+  "sourceValue": null,
+  "commercialRightsConfirmed": true,
+  "originalityReviewed": true,
+  "culturalReviewRequired": true,
+  "culturalReviewed": true,
+  "childSafetyReviewed": true,
+  "commercialReady": true,
+  "replacementRequiredForCommercialRelease": false,
+  "notes": "Artwork ingested from the HIBEYA visual-production intake. Human visual, originality, commercial-rights, child-safety and cultural review remain mandatory before commercial approval.",
+  "runtime": {
+    "file": "packages/assets/src/generated/hibiscus-purple.webp",
+    "alt": {
+      "ms": "Bunga raya ungu",
+      "en": "Purple hibiscus"
+    }
+  },
+  "reviewedBy": "HIBEYA owner",
+  "reviewedAt": "2026-08-21T14:55:58.601Z",
+  "runtimeOptimisation": {
+    "sourceMaster": "assets/masters/hibiscus-purple.png",
+    "sourceSha256": "16db8b8d378e80214fcd260bf7c4935b6b80928fc57c7aa9bb66c8aa9b4b62d0",
+    "runtimeSha256": "7b2a6b06377e8cb89d7e6bf97fec5a1afcdb43eca62c5934f5ba7ac4aad0d67f",
+    "masterDimensions": {
+      "width": 1254,
+      "height": 1254
+    },
+    "runtimeDimensions": {
+      "width": 640,
+      "height": 640
+    },
+    "runtimeFormat": "webp",
+    "quality": 82,
+    "maxEdge": 640,
+    "runtimeBytes": 66134
+  }
+}

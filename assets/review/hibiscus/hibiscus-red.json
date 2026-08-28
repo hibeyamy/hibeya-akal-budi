@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "assetId": "hibiscus-red",
+  "candidateFile": "assets/inbox/hibiscus/hibiscus-red.png",
+  "masterFile": "assets/masters/hibiscus-red.png",
+  "runtimeFile": "packages/assets/src/generated/hibiscus-red.png",
+  "status": "approved",
+  "checks": {
+    "visualQuality": true,
+    "recognisableAsHibiscus": true,
+    "childSuitable": true,
+    "originalityReviewed": true,
+    "commercialRightsConfirmed": true,
+    "culturalReviewed": true
+  },
+  "approvedAt": "2026-08-21T14:55:58.596Z"
+}

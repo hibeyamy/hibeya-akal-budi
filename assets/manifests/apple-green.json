@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "apple-green",
+  "status": "production",
+  "role": "learner-core",
+  "currentRepresentation": "svg",
+  "sourceType": "original-internal",
+  "creator": "HIBEYA deterministic vector production",
+  "sourceFile": "assets/masters/apple-green.svg",
+  "sourceValue": null,
+  "commercialRightsConfirmed": true,
+  "originalityReviewed": true,
+  "culturalReviewRequired": false,
+  "culturalReviewed": false,
+  "childSafetyReviewed": true,
+  "commercialReady": true,
+  "replacementRequiredForCommercialRelease": false,
+  "notes": "Original HIBEYA SVG candidate created in Phase 007D. Human visual/originality/rights/child-safety review is still required before commercial approval.",
+  "reviewedBy": "HIBEYA owner visual review",
+  "reviewedAt": "2026-08-21T08:06:19.373Z",
+  "runtime": {
+    "alt": {
+      "ms": "Epal hijau",
+      "en": "Green apple"
+    },
+    "file": "packages/assets/src/generated/apple-green.webp"
+  }
+}

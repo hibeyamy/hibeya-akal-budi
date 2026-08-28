@@ -1,0 +1,20 @@
+{
+  "id": "apple-green",
+  "stagedAt": "2026-08-25T23:03:33.598Z",
+  "state": "promoted-to-production",
+  "sourcePath": "packages/assets/source/review/fruit/apple-green.png",
+  "width": 1254,
+  "height": 1254,
+  "hasAlpha": true,
+  "semanticIdStable": true,
+  "productionEnabled": true,
+  "originalityReviewed": false,
+  "visualReviewed": true,
+  "notes": "Staging does not promote or publish the artwork.",
+  "visualReviewedAt": "2026-08-26T07:08:49.5964608+08:00",
+  "visualReviewMethod": "manual-local-review",
+  "promotedAt": "2026-08-25T23:26:55.486Z",
+  "masterPath": "packages/assets/source/masters/fruit/apple-green.png",
+  "deliveryPath": "packages/assets/src/generated/apple-green.webp",
+  "promotedSourceSha256": "741929C5686F3B7F5E991B751E519CC172A902484AFCF16C23B4C7AA6A4AA72C"
+}

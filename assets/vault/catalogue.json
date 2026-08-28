@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "assetCount": 6,
+  "assets": [
+    {
+      "id": "apple-green",
+      "version": 1,
+      "status": "production",
+      "commercialReady": true,
+      "masterFile": "assets/masters/apple-green.svg",
+      "masterSha256": "c24534d1aafa4c7003ebc886b0e51e181b0eee9d795961772d35c67e920a6e8d",
+      "runtimeFile": "packages/assets/src/generated/apple-green.svg",
+      "runtimeSha256": "c24534d1aafa4c7003ebc886b0e51e181b0eee9d795961772d35c67e920a6e8d",
+      "runtimeBytes": 696,
+      "alt": {
+        "ms": "Epal hijau",
+        "en": "Green apple"
+      }
+    },
+    {
+      "id": "apple-red",
+      "version": 1,
+      "status": "production",
+      "commercialReady": true,
+      "masterFile": "assets/masters/apple-red.svg",
+      "masterSha256": "e8349a44d90ddd54599cc81d17e94513c16f4a43ea89b744182da770d4e65da1",
+      "runtimeFile": "packages/assets/src/generated/apple-red.svg",
+      "runtimeSha256": "e8349a44d90ddd54599cc81d17e94513c16f4a43ea89b744182da770d4e65da1",
+      "runtimeBytes": 698,
+      "alt": {
+        "ms": "Epal merah",
+        "en": "Red apple"
+      }
+    },
+    {
+      "id": "banana-yellow",
+      "version": 1,
+      "status": "production",
+      "commercialReady": true,
+      "masterFile": "assets/masters/banana-yellow.svg",
+      "masterSha256": "e82e7ef6aa227d088ce3b9f9e629204d885adc12bb091359d7064f49f87e644f",
+      "runtimeFile": "packages/assets/src/generated/banana-yellow.svg",
+      "runtimeSha256": "e82e7ef6aa227d088ce3b9f9e629204d885adc12bb091359d7064f49f87e644f",
+      "runtimeBytes": 1349,
+      "alt": {
+        "ms": "Pisang kuning",
+        "en": "Yellow banana"
+      }
+    },
+    {
+      "id": "hibiscus-purple",
+      "version": 1,
+      "status": "production",
+      "commercialReady": true,
+      "masterFile": "assets/masters/hibiscus-purple.png",
+      "masterSha256": "16db8b8d378e80214fcd260bf7c4935b6b80928fc57c7aa9bb66c8aa9b4b62d0",
+      "runtimeFile": "packages/assets/src/generated/hibiscus-purple.webp",
+      "runtimeSha256": "7b2a6b06377e8cb89d7e6bf97fec5a1afcdb43eca62c5934f5ba7ac4aad0d67f",
+      "runtimeBytes": 66134,
+      "alt": {
+        "ms": "Bunga raya ungu",
+        "en": "Purple hibiscus"
+      }
+    },
+    {
+      "id": "hibiscus-red",
+      "version": 1,
+      "status": "production",
+      "commercialReady": true,
+      "masterFile": "assets/masters/hibiscus-red.png",
+      "masterSha256": "d469a928f7c717bf316406c43143681555a779b18c5b0d48bf79c71fb8bfabeb",
+      "runtimeFile": "packages/assets/src/generated/hibiscus-red.webp",
+      "runtimeSha256": "4ef2ad8c9b1f574299d220f05e003bc0d5d0c3edf4c3f7915a2932671f4d8ad1",
+      "runtimeBytes": 53690,
+      "alt": {
+        "ms": "Bunga raya merah",
+        "en": "Red hibiscus"
+      }
+    },
+    {
+      "id": "hibiscus-yellow",
+      "version": 1,
+      "status": "production",
+      "commercialReady": true,
+      "masterFile": "assets/masters/hibiscus-yellow.png",
+      "masterSha256": "f9c5c6525b4bdf4f029a78a7a92e01ca261aff3d070963ee8d75191acd74704e",
+      "runtimeFile": "packages/assets/src/generated/hibiscus-yellow.webp",
+      "runtimeSha256": "984015b2d42ce502757a1bab73b605d7c8eefc3662de63e03b511913aca4fdc7",
+      "runtimeBytes": 50504,
+      "alt": {
+        "ms": "Bunga raya kuning",
+        "en": "Yellow hibiscus"
+      }
+    }
+  ]
+}

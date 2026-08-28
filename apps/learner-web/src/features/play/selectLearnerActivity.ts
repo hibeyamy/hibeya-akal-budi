@@ -1,5 +1,5 @@
 import {
-  getPlayableActivitiesForAgeBand,
+  getEligibleActivitiesForLearner,
   type ResolvedPlayableActivity
 } from "@akal-budi/content-library";
 
@@ -7,124 +7,93 @@ import type {
   LearnerAgeBand
 } from "../../services/deviceActivationService";
 
+import {
+  resolveControlledAdaptiveActivity
+} from "../../journey/adaptiveActivationPolicy";
+
+import {
+  emitAdaptiveDecisionTelemetry
+} from "../../journey/adaptiveDecisionTelemetry";
+
+import {
+  getAdaptiveRuntimeConfig
+} from "../../journey/adaptiveRuntimeConfig";
+
+import {
+  resolveNextLearnerActivity
+} from "../../journey/nextLearnerActivity.service";
+
 
 export interface LearnerActivitySelectionInput {
+  childId?:
+    string;
+
   ageBand:
     LearnerAgeBand;
 
   lastCompletedActivityId:
     string | null;
+
+  completedActivityIds?:
+    readonly string[];
+
+  masteredSkillIds?:
+    readonly string[];
+
+  skillProgress?:
+    readonly import("../../journey/nextLearnerActivity.service").LearnerSkillProgress[];
 }
 
 
 export function selectLearnerActivity({
+  childId,
   ageBand,
-  lastCompletedActivityId
+  lastCompletedActivityId,
+  completedActivityIds = [],
+  masteredSkillIds = [],
+  skillProgress = []
 }: LearnerActivitySelectionInput):
   ResolvedPlayableActivity |
   null {
+  const input = {
+    activities:
+      getEligibleActivitiesForLearner({
+        ageBand,
+        masteredSkillIds
+      }),
 
-  const eligible =
-    getPlayableActivitiesForAgeBand(
-      ageBand
+    completedActivityIds,
+
+    lastCompletedActivityId,
+
+    skillProgress
+  };
+
+  /*
+   * Backward-compatible fail-safe:
+   * existing callers/tests without a learner identity stay on
+   * the proven legacy resolver.
+   */
+  if (!childId) {
+    return resolveNextLearnerActivity(
+      input
+    );
+  }
+
+  const decision =
+    resolveControlledAdaptiveActivity(
+      input,
+      childId,
+      getAdaptiveRuntimeConfig()
     );
 
-  if (
-    eligible.length ===
-    0
-  ) {
+  if (!decision) {
     return null;
   }
 
-  const ordered =
-    [...eligible].sort(
-      (a, b) => {
-
-        const aMalaysia =
-          a.blueprint
-            .malaysiaElements
-            .length > 0
-            ? 1
-            : 0;
-
-        const bMalaysia =
-          b.blueprint
-            .malaysiaElements
-            .length > 0
-            ? 1
-            : 0;
-
-        if (
-          aMalaysia !==
-          bMalaysia
-        ) {
-          return (
-            bMalaysia -
-            aMalaysia
-          );
-        }
-
-        if (
-          a.blueprint
-            .difficulty !==
-          b.blueprint
-            .difficulty
-        ) {
-          return (
-            a.blueprint
-              .difficulty -
-            b.blueprint
-              .difficulty
-          );
-        }
-
-        return (
-          a.id.localeCompare(
-            b.id
-          )
-        );
-      }
-    );
-
-  if (
-    ordered.length ===
-    1
-  ) {
-    return (
-      ordered[0] ??
-      null
-    );
-  }
-
-  const currentIndex =
-    lastCompletedActivityId
-      ? ordered.findIndex(
-          activity =>
-            activity.id ===
-            lastCompletedActivityId
-        )
-      : -1;
-
-  if (
-    currentIndex <
-    0
-  ) {
-    return (
-      ordered[0] ??
-      null
-    );
-  }
-
-  const nextIndex =
-    (
-      currentIndex +
-      1
-    ) %
-    ordered.length;
-
-  return (
-    ordered[nextIndex] ??
-    ordered[0] ??
-    null
+  emitAdaptiveDecisionTelemetry(
+    decision
   );
+
+  return decision.activity;
 }

@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hibeya.local/schemas/asset-production-brief.schema.json",
+  "title": "HIBEYA Asset Production Brief",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "assetId",
+    "curriculumPurpose",
+    "ageBands",
+    "subject",
+    "interactionRole",
+    "visualBrief",
+    "malaysianContext",
+    "culturalReviewRequired",
+    "variants",
+    "masterFormat",
+    "runtimeFormats",
+    "productionMethod",
+    "status"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "assetId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "curriculumPurpose": {
+      "type": "string",
+      "minLength": 3
+    },
+    "ageBands": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "4-5",
+          "6-7",
+          "8-9"
+        ]
+      }
+    },
+    "subject": {
+      "type": "string",
+      "minLength": 2
+    },
+    "interactionRole": {
+      "enum": [
+        "learning-object",
+        "context-object",
+        "environment",
+        "character",
+        "feedback",
+        "reward",
+        "symbol"
+      ]
+    },
+    "visualBrief": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "description",
+        "composition",
+        "background",
+        "avoid"
+      ],
+      "properties": {
+        "description": {
+          "type": "string",
+          "minLength": 10
+        },
+        "composition": {
+          "type": "string",
+          "minLength": 5
+        },
+        "background": {
+          "type": "string",
+          "minLength": 2
+        },
+        "avoid": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "malaysianContext": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "culturalReviewRequired": {
+      "type": "boolean"
+    },
+    "variants": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "masterFormat": {
+      "enum": [
+        "svg",
+        "png"
+      ]
+    },
+    "runtimeFormats": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "svg",
+          "png",
+          "webp",
+          "jpg"
+        ]
+      }
+    },
+    "productionMethod": {
+      "enum": [
+        "original-internal",
+        "original-ai-assisted",
+        "commissioned-original"
+      ]
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "review",
+        "approved-master",
+        "production"
+      ]
+    }
+  }
+}

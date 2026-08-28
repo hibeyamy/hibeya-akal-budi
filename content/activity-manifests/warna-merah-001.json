@@ -5,7 +5,9 @@
     "version": 2,
     "mechanic": "tap-choice",
     "ageBand": "3-4",
-    "domains": ["logic"],
+    "domains": [
+      "logic"
+    ],
     "skills": [
       "colour-recognition",
       "visual-discrimination"
@@ -97,10 +99,13 @@
   "catalogue": {
     "blueprintId": "warna-bunga-raya",
     "enabled": true,
-    "ageBands": ["3-4"],
+    "ageBands": [
+      "3-4"
+    ],
     "titleMs": "Cari Warna Merah",
     "titleEn": "Find the Red Colour",
-    "implementationKey": "colour-choice-v1"
+    "implementationKey": "colour-choice-v1",
+    "sequence": 20
   },
   "learningInsights": {
     "objectives": [
@@ -109,5 +114,18 @@
       "malay-vocabulary"
     ],
     "malaysiaElements": []
-  }
+  },
+  "curriculumMappings": [],
+  "skillMappings": [
+    {
+      "skillId": "colour-recognition",
+      "role": "primary",
+      "weight": 1
+    },
+    {
+      "skillId": "visual-discrimination",
+      "role": "supporting",
+      "weight": 0.5
+    }
+  ]
 }

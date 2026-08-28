@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "assets": [
+    {
+      "id": "hibiscus-red",
+      "state": "production",
+      "category": "flora",
+      "masterPath": "packages/assets/source/masters/flora/hibiscus-red.png",
+      "deliveryPath": "packages/assets/src/generated/hibiscus-red.webp",
+      "policy": {
+        "width": 1024,
+        "height": 1024,
+        "quality": 82,
+        "effort": 6,
+        "targetBytes": 102400,
+        "hardMaxBytes": 163840
+      }
+    },
+    {
+      "id": "hibiscus-yellow",
+      "state": "production",
+      "category": "flora",
+      "masterPath": "packages/assets/source/masters/flora/hibiscus-yellow.png",
+      "deliveryPath": "packages/assets/src/generated/hibiscus-yellow.webp",
+      "policy": {
+        "width": 1024,
+        "height": 1024,
+        "quality": 82,
+        "effort": 6,
+        "targetBytes": 102400,
+        "hardMaxBytes": 163840
+      }
+    },
+    {
+      "id": "hibiscus-purple",
+      "state": "production",
+      "category": "flora",
+      "masterPath": "packages/assets/source/masters/flora/hibiscus-purple.png",
+      "deliveryPath": "packages/assets/src/generated/hibiscus-purple.webp",
+      "policy": {
+        "width": 1024,
+        "height": 1024,
+        "quality": 82,
+        "effort": 6,
+        "targetBytes": 102400,
+        "hardMaxBytes": 163840
+      }
+    }
+  ]
+}

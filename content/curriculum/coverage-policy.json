@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "activeSkillPolicy": {
+    "minimumEnabledPrimaryActivities": 1,
+    "targetEnabledPrimaryActivities": 3
+  },
+  "difficultyReadiness": {
+    "minimumDistinctDifficultiesPerContext": 2
+  },
+  "notes": [
+    "Minimum is a release coverage gate, not an instruction to auto-enable drafts.",
+    "Target depth supports mastery, remediation, diversity and future difficulty adaptation.",
+    "Curriculum claims require separate source and reviewer evidence."
+  ]
+}

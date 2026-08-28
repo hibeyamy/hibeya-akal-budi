@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "accessibility": {
+    "standard": "WCAG 2.1 AA",
+    "blockImpacts": [
+      "serious",
+      "critical"
+    ],
+    "learnerPreferredTouchTargetPx": 56,
+    "parentMinimumTouchTargetPx": 44,
+    "reducedMotionRequired": true
+  },
+  "visualRegression": {
+    "browser": "chromium",
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    },
+    "deviceScaleFactor": 1,
+    "locale": "ms-MY",
+    "timezone": "Asia/Kuala_Lumpur",
+    "maxDiffPixelRatio": 0.01,
+    "baselineReviewRequired": true
+  }
+}

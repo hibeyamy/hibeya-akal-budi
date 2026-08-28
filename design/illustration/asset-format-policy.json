@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "defaultStrategy": "best-format-for-purpose",
+  "formats": {
+    "svg": {
+      "useFor": ["simple-icons","basic-shapes","logos","flat-vector-symbols"],
+      "masterAllowed": true,
+      "runtimeAllowed": true
+    },
+    "png": {
+      "useFor": ["transparent-raster-illustrations","high-fidelity-master-artwork","manual-review-assets"],
+      "masterAllowed": true,
+      "runtimeAllowed": true
+    },
+    "webp": {
+      "useFor": ["production-runtime-illustrations","complex-scenes","optimised-transparent-assets"],
+      "masterAllowed": false,
+      "runtimeAllowed": true
+    },
+    "jpg": {
+      "useFor": ["photographic-backgrounds"],
+      "masterAllowed": false,
+      "runtimeAllowed": true
+    }
+  },
+  "preferredRuntimeForIllustration": "webp",
+  "preferredMasterForRasterIllustration": "png",
+  "preferredMasterForSimpleVector": "svg",
+  "humanVisualApprovalRequired": true,
+  "commercialRightsApprovalRequired": true,
+  "culturalReviewWhenRelevant": true,
+  "aiGeneratedAssetsMustNotSelfApprove": true
+}

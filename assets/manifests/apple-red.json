@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "apple-red",
+  "status": "production",
+  "role": "learner-core",
+  "currentRepresentation": "svg",
+  "sourceType": "original-internal",
+  "creator": "HIBEYA deterministic vector production",
+  "sourceFile": "assets/masters/apple-red.svg",
+  "sourceValue": null,
+  "commercialRightsConfirmed": true,
+  "originalityReviewed": true,
+  "culturalReviewRequired": false,
+  "culturalReviewed": false,
+  "childSafetyReviewed": true,
+  "commercialReady": true,
+  "replacementRequiredForCommercialRelease": false,
+  "notes": "Original HIBEYA SVG candidate created in Phase 007D. Human visual/originality/rights/child-safety review is still required before commercial approval.",
+  "reviewedBy": "HIBEYA owner visual review",
+  "reviewedAt": "2026-08-21T08:06:19.369Z",
+  "runtime": {
+    "alt": {
+      "ms": "Epal merah",
+      "en": "Red apple"
+    },
+    "file": "packages/assets/src/generated/apple-red.webp"
+  }
+}

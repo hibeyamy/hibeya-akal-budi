@@ -79,6 +79,21 @@ export async function completeLocalSession(
     );
   }
 
+  if (
+    session.activityId !== result.activityId ||
+    session.activityVersion !== result.activityVersion
+  ) {
+    throw new Error(
+      `Session result does not match local session: ${sessionId}`
+    );
+  }
+
+  // Completion is immutable once committed. A replay after reload or
+  // retry must not replace the original result/completion timestamp.
+  if (session.completedAt || session.result) {
+    return;
+  }
+
   session.result = result;
   session.completedAt = result.completedAt;
   session.updatedAt = Date.now();
@@ -98,15 +113,31 @@ export async function getLocalSession(
   );
 }
 
+
+export async function deleteLocalSession(
+  sessionId: string
+): Promise<void> {
+  const database = await getDatabase();
+
+  await database.delete(
+    "sessions",
+    sessionId
+  );
+}
+
 export async function getPendingSessions():
   Promise<StoredSession[]> {
   const database = await getDatabase();
 
-  return database.getAllFromIndex(
+  const sessions = await database.getAllFromIndex(
     "sessions",
     "by-sync-status",
     "pending"
   );
+
+  return sessions
+    .filter(isStoredSession)
+    .filter(isSyncableCompletedSession);
 }
 
 export async function getLatestIncompleteSession():
@@ -118,14 +149,38 @@ export async function getLatestIncompleteSession():
     "by-updated-at"
   );
 
-  const incomplete = sessions
+  return sessions
+    .filter(isStoredSession)
     .filter((session) => !session.completedAt)
     .sort(
       (a, b) =>
         b.updatedAt - a.updatedAt
-    );
+    )[0];
+}
 
-  return incomplete[0];
+export async function getLatestIncompleteSessionForActivity(
+  activityId: string,
+  activityVersion: number
+): Promise<StoredSession | undefined> {
+  const database = await getDatabase();
+
+  const sessions = await database.getAllFromIndex(
+    "sessions",
+    "by-activity-id",
+    activityId
+  );
+
+  return sessions
+    .filter(isStoredSession)
+    .filter(
+      (session) =>
+        !session.completedAt &&
+        session.activityVersion === activityVersion
+    )
+    .sort(
+      (a, b) =>
+        b.updatedAt - a.updatedAt
+    )[0];
 }
 
 export async function markSessionSynced(
@@ -171,5 +226,124 @@ export async function markSessionFailed(
   await database.put(
     "sessions",
     session
+  );
+}
+
+
+function isStoredSession(
+  value: unknown
+): value is StoredSession {
+  if (
+    typeof value !== "object" ||
+    value === null
+  ) {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+
+  return (
+    typeof candidate.id === "string" &&
+    candidate.id.length > 0 &&
+    typeof candidate.activityId === "string" &&
+    candidate.activityId.length > 0 &&
+    typeof candidate.activityVersion === "number" &&
+    Number.isInteger(candidate.activityVersion) &&
+    candidate.activityVersion > 0 &&
+    typeof candidate.startedAt === "number" &&
+    Number.isFinite(candidate.startedAt) &&
+    Array.isArray(candidate.answers) &&
+    candidate.answers.every(isGameAnswer) &&
+    (
+      candidate.result === undefined ||
+      isGameSessionResult(candidate.result)
+    ) &&
+    (
+      candidate.completedAt === undefined ||
+      (
+        typeof candidate.completedAt === "number" &&
+        Number.isFinite(candidate.completedAt)
+      )
+    ) &&
+    (
+      candidate.syncStatus === "pending" ||
+      candidate.syncStatus === "synced" ||
+      candidate.syncStatus === "failed"
+    ) &&
+    typeof candidate.createdAt === "number" &&
+    Number.isFinite(candidate.createdAt) &&
+    typeof candidate.updatedAt === "number" &&
+    Number.isFinite(candidate.updatedAt)
+  );
+}
+
+function isSyncableCompletedSession(
+  session: StoredSession
+): boolean {
+  return (
+    session.completedAt !== undefined &&
+    session.result !== undefined &&
+    session.result.activityId === session.activityId &&
+    session.result.activityVersion === session.activityVersion
+  );
+}
+
+function isGameAnswer(
+  value: unknown
+): value is GameAnswer {
+  if (
+    typeof value !== "object" ||
+    value === null
+  ) {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+
+  return (
+    typeof candidate.optionId === "string" &&
+    candidate.optionId.length > 0 &&
+    typeof candidate.correct === "boolean" &&
+    typeof candidate.answeredAt === "number" &&
+    Number.isFinite(candidate.answeredAt)
+  );
+}
+
+function isGameSessionResult(
+  value: unknown
+): value is GameSessionResult {
+  if (
+    typeof value !== "object" ||
+    value === null
+  ) {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+
+  return (
+    typeof candidate.activityId === "string" &&
+    candidate.activityId.length > 0 &&
+    typeof candidate.activityVersion === "number" &&
+    Number.isInteger(candidate.activityVersion) &&
+    candidate.activityVersion > 0 &&
+    isNonNegativeInteger(candidate.correct) &&
+    isNonNegativeInteger(candidate.incorrect) &&
+    isNonNegativeInteger(candidate.attempts) &&
+    typeof candidate.durationSeconds === "number" &&
+    Number.isFinite(candidate.durationSeconds) &&
+    candidate.durationSeconds >= 0 &&
+    typeof candidate.completedAt === "number" &&
+    Number.isFinite(candidate.completedAt)
+  );
+}
+
+function isNonNegativeInteger(
+  value: unknown
+): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isInteger(value) &&
+    value >= 0
   );
 }

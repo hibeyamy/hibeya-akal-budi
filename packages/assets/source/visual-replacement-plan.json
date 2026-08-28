@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "assets": [
+    {
+      "id": "apple-red",
+      "category": "fruit",
+      "state": "promoted-to-authoritative-master",
+      "minimumWidth": 1024,
+      "minimumHeight": 1024,
+      "requirements": [
+        "rich child-friendly illustration",
+        "clean recognisable silhouette",
+        "transparent or clean isolated background",
+        "no text or watermark",
+        "original Hibeya visual family",
+        "red and green apple variants should share geometry/composition"
+      ],
+      "masterPath": "packages/assets/source/masters/fruit/apple-red.png",
+      "deliveryPath": "packages/assets/src/generated/apple-red.webp"
+    },
+    {
+      "id": "apple-green",
+      "category": "fruit",
+      "state": "promoted-to-authoritative-master",
+      "minimumWidth": 1024,
+      "minimumHeight": 1024,
+      "requirements": [
+        "rich child-friendly illustration",
+        "clean recognisable silhouette",
+        "transparent or clean isolated background",
+        "no text or watermark",
+        "original Hibeya visual family",
+        "red and green apple variants should share geometry/composition"
+      ],
+      "masterPath": "packages/assets/source/masters/fruit/apple-green.png",
+      "deliveryPath": "packages/assets/src/generated/apple-green.webp"
+    },
+    {
+      "id": "banana-yellow",
+      "category": "fruit",
+      "state": "promoted-to-authoritative-master",
+      "minimumWidth": 1024,
+      "minimumHeight": 1024,
+      "requirements": [
+        "rich child-friendly illustration",
+        "clean recognisable silhouette",
+        "transparent or clean isolated background",
+        "no text or watermark",
+        "original Hibeya visual family"
+      ],
+      "masterPath": "packages/assets/source/masters/fruit/banana-yellow.png",
+      "deliveryPath": "packages/assets/src/generated/banana-yellow.webp"
+    }
+  ]
+}

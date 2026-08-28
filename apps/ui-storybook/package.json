@@ -1,0 +1,28 @@
+{
+  "version": "0.0.0",
+  "name": "ui-storybook",
+  "scripts": {
+    "build": "storybook build",
+    "storybook": "storybook dev -p 6006",
+    "typecheck": "tsc --noEmit",
+    "build-storybook": "storybook build",
+    "test": "echo \"storybook stories validated by build\""
+  },
+  "devDependencies": {
+    "@storybook/addon-a11y": "^10.5.9",
+    "@storybook/react-vite": "^10.5.9",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "storybook": "^10.5.9",
+    "typescript": "~6.0.2"
+  },
+  "type": "module",
+  "dependencies": {
+    "@akal-budi/design-system": "workspace:*",
+    "@akal-budi/ui": "workspace:*",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "@akal-budi/assets": "workspace:*"
+  },
+  "private": true
+}

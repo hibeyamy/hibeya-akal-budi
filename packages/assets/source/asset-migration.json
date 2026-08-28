@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "migratedAt": "2026-08-25T07:43:35+08:00",
+  "policy": {
+    "runtimeDelivery": "webp",
+    "legacyPrototype": "svg",
+    "semanticIdsStable": true,
+    "fruitSvgMigrationDeferred": false,
+    "sourceMaster": "png"
+  },
+  "assets": [
+    {
+      "id": "apple-red",
+      "master": "source/masters/fruit/apple-red.png",
+      "runtime": "src/generated/apple-red.webp",
+      "legacy": "source/legacy/fruit/apple-red.svg",
+      "masterSha256": "BB35A0ADCCF449CF0701ED2C4C78428475640A1DE13B4D978C85DD3BB768926C",
+      "legacySha256": "E8349A44D90DDD54599CC81D17E94513C16F4A43EA89B744182DA770D4E65DA1",
+      "runtimeSha256": "99641BA864646792D0A30DDB63C1559CFB3D61381088170BF75E69E6DC942A6B"
+    },
+    {
+      "id": "apple-green",
+      "master": "source/masters/fruit/apple-green.png",
+      "runtime": "src/generated/apple-green.webp",
+      "legacy": "source/legacy/fruit/apple-green.svg",
+      "masterSha256": "741929C5686F3B7F5E991B751E519CC172A902484AFCF16C23B4C7AA6A4AA72C",
+      "legacySha256": "C24534D1AAFA4C7003EBC886B0E51E181B0EEE9D795961772D35C67E920A6E8D",
+      "runtimeSha256": "52371DCC2F9B5E6405A8CEE63F4315410A56A03DA74F3A9382F9C0A6E15D6647"
+    },
+    {
+      "id": "banana-yellow",
+      "master": "source/masters/fruit/banana-yellow.png",
+      "runtime": "src/generated/banana-yellow.webp",
+      "legacy": "source/legacy/fruit/banana-yellow.svg",
+      "masterSha256": "4E375F4B5BFD408000383BC79757F3686E5FEC4BF70139BD56C87902A3E1EEE3",
+      "legacySha256": "E82E7EF6AA227D088CE3B9F9E629204D885ADC12BB091359D7064F49F87E644F",
+      "runtimeSha256": "5AE75BDE98956F30B1CD4981D2F55262B6F327901D0CF4A4DB2348830F39FE9C"
+    },
+    {
+      "id": "hibiscus-red",
+      "master": "source/masters/flora/hibiscus-red.png",
+      "runtime": "src/generated/hibiscus-red.webp",
+      "legacy": "source/legacy/flora/hibiscus-red.svg",
+      "masterSha256": "D469A928F7C717BF316406C43143681555A779B18C5B0D48BF79C71FB8BFABEB",
+      "legacySha256": "97355A43305C0D0016A72DA2BF1BA1688802CE1061FDE234FF643E1901333114",
+      "runtimeSha256": "79E0E5230F1B03B879486EC70F874B8EAF026D8AF411F20F7ACF6917D18D4CB5"
+    },
+    {
+      "id": "hibiscus-yellow",
+      "master": "source/masters/flora/hibiscus-yellow.png",
+      "runtime": "src/generated/hibiscus-yellow.webp",
+      "legacy": "source/legacy/flora/hibiscus-yellow.svg",
+      "masterSha256": "F9C5C6525B4BDF4F029A78A7A92E01CA261AFF3D070963EE8D75191ACD74704E",
+      "legacySha256": "EB69E33B6311DB514F5374258FAE92264404827FC386E3D308605A79833DEE89",
+      "runtimeSha256": "4402F9DD2D4C139C6993E2B0965C207AA0E086245DB025BA37A727B334E22002"
+    },
+    {
+      "id": "hibiscus-purple",
+      "master": "source/masters/flora/hibiscus-purple.png",
+      "runtime": "src/generated/hibiscus-purple.webp",
+      "legacy": "source/legacy/flora/hibiscus-purple.svg",
+      "masterSha256": "16DB8B8D378E80214FCD260BF7C4935B6B80928FC57C7AA9BB66C8AA9B4B62D0",
+      "legacySha256": "AB9E347D77FB57582D96265D7691254F5BC6C055D7C6A1C999E2C6E6E8A8A00C",
+      "runtimeSha256": "7ED97EE4931E38AADC5A2E23AA4391D3B104DB7F6B88A953CD418E5B82E9F971"
+    }
+  ],
+  "closedOutAt": "2026-08-25T23:41:03.606Z"
+}\n

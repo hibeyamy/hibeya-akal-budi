@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-labelledby="title desc">
+  <title id="title">Green apple</title>
+  <desc id="desc">Original HIBEYA illustration of a simple green apple with one leaf.</desc>
+  <g fill="none" stroke="#23333F" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M162 89c-8-27 4-47 25-59" />
+    <path d="M174 62c25-17 51-12 66 7-23 16-47 17-66-7Z" fill="#4F8D45"/>
+    <path d="M159 103c-27-31-77-25-98 10-25 42-10 110 31 150 22 22 44 31 67 18 23 13 45 4 67-18 41-40 56-108 31-150-21-35-71-41-98-10Z" fill="#8BCB68"/>
+    <path d="M105 133c12-17 30-24 46-21" stroke="#CDEBAF" stroke-width="9"/>
+  </g>
+</svg>

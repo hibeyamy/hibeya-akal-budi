@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "assets": [
+    {
+      "id": "apple-red",
+      "humanVisualReviewRequired": true,
+      "target": "PRODUCTION_VISUAL_TARGET.md"
+    },
+    {
+      "id": "apple-green",
+      "humanVisualReviewRequired": true,
+      "target": "PRODUCTION_VISUAL_TARGET.md"
+    },
+    {
+      "id": "banana-yellow",
+      "humanVisualReviewRequired": true,
+      "target": "PRODUCTION_VISUAL_TARGET.md"
+    },
+    {
+      "id": "hibiscus-red",
+      "humanVisualReviewRequired": true,
+      "target": "PRODUCTION_VISUAL_TARGET.md"
+    },
+    {
+      "id": "hibiscus-yellow",
+      "humanVisualReviewRequired": true,
+      "target": "PRODUCTION_VISUAL_TARGET.md"
+    },
+    {
+      "id": "hibiscus-purple",
+      "humanVisualReviewRequired": true,
+      "target": "PRODUCTION_VISUAL_TARGET.md"
+    }
+  ]
+}

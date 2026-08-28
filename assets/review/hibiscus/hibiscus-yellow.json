@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "assetId": "hibiscus-yellow",
+  "candidateFile": "assets/inbox/hibiscus/hibiscus-yellow.png",
+  "masterFile": "assets/masters/hibiscus-yellow.png",
+  "runtimeFile": "packages/assets/src/generated/hibiscus-yellow.png",
+  "status": "approved",
+  "checks": {
+    "visualQuality": true,
+    "recognisableAsHibiscus": true,
+    "childSuitable": true,
+    "originalityReviewed": true,
+    "commercialRightsConfirmed": true,
+    "culturalReviewed": true
+  },
+  "approvedAt": "2026-08-21T14:55:58.599Z"
+}

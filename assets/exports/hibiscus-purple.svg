@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 360" role="img" aria-labelledby="title desc">
+<title id="title">Bunga raya ungu</title>
+<desc id="desc">Original HIBEYA production review illustration: Bunga raya ungu.</desc>
+<defs>
+  <radialGradient id="petal" cx="48%" cy="38%" r="70%">
+    <stop offset="0" stop-color="#D6A5F2"/>
+    <stop offset=".58" stop-color="#A96BD4"/>
+    <stop offset="1" stop-color="#683C9C"/>
+  </radialGradient>
+  <radialGradient id="throat" cx="50%" cy="45%" r="58%">
+    <stop offset="0" stop-color="#4E286F"/>
+    <stop offset=".72" stop-color="#683C9C"/>
+    <stop offset="1" stop-color="#A96BD4"/>
+  </radialGradient>
+  <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#7BCB48"/>
+    <stop offset=".55" stop-color="#3F9E3E"/>
+    <stop offset="1" stop-color="#1F6D36"/>
+  </linearGradient>
+  <linearGradient id="stamen" x1="0" y1="1" x2="1" y2="0">
+    <stop offset="0" stop-color="#4E286F"/>
+    <stop offset=".7" stop-color="#FFC43D"/>
+    <stop offset="1" stop-color="#FFD85A"/>
+  </linearGradient>
+  <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+    <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#23333F" flood-opacity=".18"/>
+  </filter>
+</defs>
+
+<g filter="url(#shadow)" stroke="#263844" stroke-width="5.5" stroke-linejoin="round">
+  <path d="M124 247 C72 251 46 280 37 319 C78 316 112 300 139 265 C135 256 130 250 124 247Z" fill="url(#leaf)"/>
+  <path d="M234 246 C286 250 313 278 323 317 C281 315 247 299 220 264 C224 256 229 250 234 246Z" fill="url(#leaf)"/>
+  <path d="M112 274 C88 289 68 301 48 310" fill="none" stroke="#B7E37E" stroke-width="3"/>
+  <path d="M246 273 C270 288 291 300 312 308" fill="none" stroke="#B7E37E" stroke-width="3"/>
+
+  <path d="M179 170 C139 142 111 91 136 54 C156 25 191 44 196 91 C205 43 242 27 260 59 C282 99 246 144 205 171 C197 176 188 178 179 170Z" fill="url(#petal)"/>
+  <path d="M178 171 C134 161 80 165 63 126 C50 96 77 72 112 91 C87 60 101 29 132 34 C173 40 185 104 190 154 C189 164 185 169 178 171Z" fill="url(#petal)"/>
+  <path d="M177 172 C139 191 99 231 68 216 C39 202 45 166 80 151 C42 149 27 118 48 95 C78 64 130 101 169 143 C177 153 181 164 177 172Z" fill="url(#petal)"/>
+  <path d="M181 173 C217 194 256 234 288 220 C318 207 313 170 279 153 C317 152 333 121 312 98 C284 66 230 102 192 143 C183 153 178 165 181 173Z" fill="url(#petal)"/>
+  <path d="M180 171 C220 161 274 166 292 128 C306 98 279 73 244 91 C270 61 256 30 225 34 C184 39 171 103 168 153 C169 163 173 169 180 171Z" fill="url(#petal)"/>
+
+  <ellipse cx="180" cy="172" rx="43" ry="35" fill="url(#throat)" stroke="none"/>
+  <path d="M180 173 C203 150 229 126 254 91 C266 75 276 59 283 44" fill="none" stroke="url(#stamen)" stroke-width="8" stroke-linecap="round"/>
+</g>
+
+<g fill="#FFC43D" stroke="#263844" stroke-width="2">
+  <circle cx="285" cy="42" r="6"/>
+  <circle cx="276" cy="55" r="5"/>
+  <circle cx="291" cy="57" r="5"/>
+  <circle cx="268" cy="68" r="5"/>
+  <circle cx="282" cy="71" r="5"/>
+  <circle cx="258" cy="81" r="5"/>
+</g>
+<g fill="#FFD85A">
+  <circle cx="288" cy="40" r="2"/>
+  <circle cx="279" cy="53" r="2"/>
+  <circle cx="294" cy="55" r="2"/>
+</g>
+</svg>

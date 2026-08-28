@@ -1,0 +1,21 @@
+{
+  "name": "@akal-budi/design-system",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "zod": "^4.0.0"
+  },
+  "scripts": {
+    "build": "echo \"build pending\"",
+    "lint": "echo \"lint pending\"",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "echo \"clean pending\""
+  },
+  "exports": {
+    "./tokens.css": "./src/tokens.css"
+  }
+}

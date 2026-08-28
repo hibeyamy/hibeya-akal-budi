@@ -40,6 +40,9 @@ describe(
           completedSessionCount:
             0,
 
+          completedActivityIds:
+            [],
+
           updatedAt:
             0
         });
@@ -63,8 +66,64 @@ describe(
         expect(
           state.completedSessionCount
         ).toBe(1);
+
+        expect(
+          state.completedActivityIds
+        ).toEqual([
+          "warna-bunga-raya-001"
+        ]);
       }
     );
+    it(
+      "does not duplicate unique completion when an activity is replayed",
+      async () => {
+        await recordCompletedJourneyActivity(
+          "warna-bunga-raya-001"
+        );
+
+        const state =
+          await recordCompletedJourneyActivity(
+            "warna-bunga-raya-001"
+          );
+
+        expect(
+          state.completedSessionCount
+        ).toBe(2);
+
+        expect(
+          state.completedActivityIds
+        ).toEqual([
+          "warna-bunga-raya-001"
+        ]);
+      }
+    );
+
+
+    it(
+      "tracks distinct completed activities",
+      async () => {
+        await recordCompletedJourneyActivity(
+          "warna-bunga-raya-001"
+        );
+
+        const state =
+          await recordCompletedJourneyActivity(
+            "warna-merah-001"
+          );
+
+        expect(
+          state.completedSessionCount
+        ).toBe(2);
+
+        expect(
+          state.completedActivityIds
+        ).toEqual([
+          "warna-bunga-raya-001",
+          "warna-merah-001"
+        ]);
+      }
+    );
+
 
     it(
       "clears state",
@@ -84,9 +143,39 @@ describe(
           completedSessionCount:
             0,
 
+          completedActivityIds:
+            [],
+
           updatedAt:
             0
         });
+      }
+    );
+
+
+    it(
+      "does not double-count the same completed session",
+      async () => {
+        await recordCompletedJourneyActivity(
+          "warna-merah-001",
+          "session-abc"
+        );
+
+        const state =
+          await recordCompletedJourneyActivity(
+            "warna-merah-001",
+            "session-abc"
+          );
+
+        expect(
+          state.completedSessionCount
+        ).toBe(1);
+
+        expect(
+          state.completedActivityIds
+        ).toEqual([
+          "warna-merah-001"
+        ]);
       }
     );
 

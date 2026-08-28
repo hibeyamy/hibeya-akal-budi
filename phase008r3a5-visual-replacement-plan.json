@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "assets": [
+    {
+      "id": "apple-red",
+      "category": "fruit",
+      "state": "awaiting-approved-raster-artwork",
+      "minimumWidth": 1024,
+      "minimumHeight": 1024,
+      "requirements": [
+        "rich child-friendly illustration",
+        "clean recognisable silhouette",
+        "transparent or clean isolated background",
+        "no text or watermark",
+        "original Hibeya visual family",
+        "red and green apple variants should share geometry/composition"
+      ]
+    },
+    {
+      "id": "apple-green",
+      "category": "fruit",
+      "state": "awaiting-approved-raster-artwork",
+      "minimumWidth": 1024,
+      "minimumHeight": 1024,
+      "requirements": [
+        "rich child-friendly illustration",
+        "clean recognisable silhouette",
+        "transparent or clean isolated background",
+        "no text or watermark",
+        "original Hibeya visual family",
+        "red and green apple variants should share geometry/composition"
+      ]
+    },
+    {
+      "id": "banana-yellow",
+      "category": "fruit",
+      "state": "awaiting-approved-raster-artwork",
+      "minimumWidth": 1024,
+      "minimumHeight": 1024,
+      "requirements": [
+        "rich child-friendly illustration",
+        "clean recognisable silhouette",
+        "transparent or clean isolated background",
+        "no text or watermark",
+        "original Hibeya visual family"
+      ]
+    }
+  ]
+}

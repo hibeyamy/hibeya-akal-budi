@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "principles": {
+    "childWellbeingFirst": true,
+    "lowSensoryLoadDefault": true,
+    "noBehaviouralDarkPatterns": true,
+    "reducedMotionRequired": true,
+    "accessibleFocusRequired": true,
+    "originalVisualAssetsRequired": true
+  },
+  "learner": {
+    "minimumTouchTargetPx": 56,
+    "maximumPrimaryChoicesVisible": 6,
+    "readingDensity": "very-low",
+    "motion": "minimal"
+  },
+  "parent": {
+    "minimumTouchTargetPx": 44,
+    "readingDensity": "normal",
+    "motion": "standard"
+  },
+  "forbiddenPatterns": [
+    "flashing-reward",
+    "streak-pressure",
+    "loss-aversion",
+    "countdown-pressure",
+    "infinite-scroll",
+    "behavioural-advertising",
+    "forced-autoplay"
+  ]
+}

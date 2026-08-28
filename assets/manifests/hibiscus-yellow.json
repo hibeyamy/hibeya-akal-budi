@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "id": "hibiscus-yellow",
+  "status": "production",
+  "role": "learner-core",
+  "currentRepresentation": "png",
+  "sourceType": "original-ai-assisted",
+  "creator": "HIBEYA visual-production workflow",
+  "sourceFile": "assets/masters/hibiscus-yellow.png",
+  "sourceValue": null,
+  "commercialRightsConfirmed": true,
+  "originalityReviewed": true,
+  "culturalReviewRequired": true,
+  "culturalReviewed": true,
+  "childSafetyReviewed": true,
+  "commercialReady": true,
+  "replacementRequiredForCommercialRelease": false,
+  "notes": "Artwork ingested from the HIBEYA visual-production intake. Human visual, originality, commercial-rights, child-safety and cultural review remain mandatory before commercial approval.",
+  "runtime": {
+    "file": "packages/assets/src/generated/hibiscus-yellow.webp",
+    "alt": {
+      "ms": "Bunga raya kuning",
+      "en": "Yellow hibiscus"
+    }
+  },
+  "reviewedBy": "HIBEYA owner",
+  "reviewedAt": "2026-08-21T14:55:58.599Z",
+  "runtimeOptimisation": {
+    "sourceMaster": "assets/masters/hibiscus-yellow.png",
+    "sourceSha256": "f9c5c6525b4bdf4f029a78a7a92e01ca261aff3d070963ee8d75191acd74704e",
+    "runtimeSha256": "984015b2d42ce502757a1bab73b605d7c8eefc3662de63e03b511913aca4fdc7",
+    "masterDimensions": {
+      "width": 1254,
+      "height": 1254
+    },
+    "runtimeDimensions": {
+      "width": 640,
+      "height": 640
+    },
+    "runtimeFormat": "webp",
+    "quality": 82,
+    "maxEdge": 640,
+    "runtimeBytes": 50504
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "assetId": "hibiscus-yellow",
+  "curriculumPurpose": "Replace prototype hibiscus-yellow with an original HIBEYA production asset.",
+  "ageBands": [
+    "4-5",
+    "6-7"
+  ],
+  "subject": "hibiscus yellow",
+  "interactionRole": "learning-object",
+  "visualBrief": {
+    "description": "Original child-readable HIBEYA illustration of hibiscus yellow, designed as a clear learning object.",
+    "composition": "Single dominant object with strong silhouette and generous negative space.",
+    "background": "transparent",
+    "avoid": [
+      "text",
+      "logos",
+      "watermarks",
+      "protected characters",
+      "celebrity likenesses",
+      "photorealistic clutter",
+      "unnecessary decorative detail"
+    ]
+  },
+  "malaysianContext": [
+    "bunga raya",
+    "Malaysian national flower context"
+  ],
+  "culturalReviewRequired": true,
+  "variants": [
+    "default"
+  ],
+  "masterFormat": "svg",
+  "runtimeFormats": [
+    "svg",
+    "webp"
+  ],
+  "productionMethod": "original-internal",
+  "status": "review"
+}

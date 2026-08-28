@@ -14,6 +14,43 @@ export type SyncStatus =
   | "synced"
   | "failed";
 
+export type AdaptiveObservationAuthority =
+  | "legacy"
+  | "adaptive";
+
+export type AdaptiveObservationFallbackReason =
+  | "disabled"
+  | "outside-cohort"
+  | "legacy-null"
+  | "shadow-null"
+  | "shadow-error"
+  | "invalid-adaptive-candidate"
+  | "adaptive-selected";
+
+export interface StoredAdaptiveObservation {
+  eventId: string;
+
+  occurredAt: number;
+
+  authority:
+    AdaptiveObservationAuthority;
+
+  fallbackReason:
+    AdaptiveObservationFallbackReason;
+
+  rolloutBucket: number;
+  rolloutPercent: number;
+
+  legacyActivityId: string;
+  adaptiveActivityId: string | null;
+  selectedActivityId: string;
+
+  syncStatus: SyncStatus;
+
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface StoredSession {
   id: string;
 
@@ -73,13 +110,23 @@ interface AkalBudiDatabase extends DBSchema {
     key: string;
     value: LocalSetting;
   };
+
+  adaptiveObservations: {
+    key: string;
+    value: StoredAdaptiveObservation;
+
+    indexes: {
+      "by-sync-status": SyncStatus;
+      "by-occurred-at": number;
+    };
+  };
 }
 
 const DATABASE_NAME =
   "hibeya-akal-budi";
 
 const DATABASE_VERSION =
-  3;
+  4;
 
 let databasePromise:
   | Promise<
@@ -153,6 +200,32 @@ export function getDatabase() {
                     keyPath:
                       "key"
                   }
+                );
+            }
+
+            if (
+              oldVersion < 4
+            ) {
+              const observationStore =
+                database
+                  .createObjectStore(
+                    "adaptiveObservations",
+                    {
+                      keyPath:
+                        "eventId"
+                    }
+                  );
+
+              observationStore
+                .createIndex(
+                  "by-sync-status",
+                  "syncStatus"
+                );
+
+              observationStore
+                .createIndex(
+                  "by-occurred-at",
+                  "occurredAt"
                 );
             }
           }

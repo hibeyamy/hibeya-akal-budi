@@ -1,0 +1,20 @@
+{
+  "id": "banana-yellow",
+  "stagedAt": "2026-08-25T23:03:33.846Z",
+  "state": "promoted-to-production",
+  "sourcePath": "packages/assets/source/review/fruit/banana-yellow.png",
+  "width": 1254,
+  "height": 1254,
+  "hasAlpha": false,
+  "semanticIdStable": true,
+  "productionEnabled": true,
+  "originalityReviewed": false,
+  "visualReviewed": true,
+  "notes": "Staging does not promote or publish the artwork.",
+  "visualReviewedAt": "2026-08-26T07:08:49.6277942+08:00",
+  "visualReviewMethod": "manual-local-review",
+  "promotedAt": "2026-08-25T23:26:55.553Z",
+  "masterPath": "packages/assets/source/masters/fruit/banana-yellow.png",
+  "deliveryPath": "packages/assets/src/generated/banana-yellow.webp",
+  "promotedSourceSha256": "4E375F4B5BFD408000383BC79757F3686E5FEC4BF70139BD56C87902A3E1EEE3"
+}

@@ -13,8 +13,8 @@ import {
 } from "./features/activation/DeviceActivation";
 
 import {
-  ActivityPlayer
-} from "./features/play/ActivityPlayer";
+  LearnerJourneyScreen
+} from "./journey";
 
 import {
   validateLearnerDevice
@@ -142,7 +142,7 @@ function App() {
 
 
   return (
-    <ActivityPlayer />
+    <LearnerJourneyScreen />
   );
 }
 

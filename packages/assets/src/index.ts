@@ -1,11 +1,26 @@
+export {
+  assetGovernanceMetadata,
+  assetStatuses,
+  assetVisualFamilies,
+  getAssetMetadata,
+  type AssetGovernanceMetadata,
+  type AssetStatus,
+  type AssetVisualFamily
+} from "./metadata";
+import { commercialAssetOverrides } from "./commercial";
+
 export interface AssetDefinition {
   id: string;
 
   type:
     | "emoji"
-    | "image";
+    | "image"
+    | "quantity";
 
   value: string;
+
+  itemAsset?: string;
+  count?: number;
 
   alt: {
     ms: string;
@@ -32,7 +47,7 @@ const assets:
         "emoji",
 
       value:
-        "🍎",
+        "ðŸŽ",
 
       alt: {
         ms:
@@ -52,7 +67,7 @@ const assets:
         "emoji",
 
       value:
-        "🍏",
+        "ðŸ",
 
       alt: {
         ms:
@@ -72,7 +87,7 @@ const assets:
         "emoji",
 
       value:
-        "🍌",
+        "ðŸŒ",
 
       alt: {
         ms:
@@ -85,7 +100,7 @@ const assets:
 
 
     // ========================================================
-    // AKAL BUDI — MALAYSIAN GARDEN PROTOTYPE ASSETS
+    // AKAL BUDI â€” MALAYSIAN GARDEN PROTOTYPE ASSETS
     //
     // These are temporary Unicode prototype representations.
     //
@@ -102,7 +117,7 @@ const assets:
         "emoji",
 
       value:
-        "🔴🌺",
+        "ðŸ”´ðŸŒº",
 
       alt: {
         ms:
@@ -122,7 +137,7 @@ const assets:
         "emoji",
 
       value:
-        "🟡🌺",
+        "ðŸŸ¡ðŸŒº",
 
       alt: {
         ms:
@@ -142,7 +157,7 @@ const assets:
         "emoji",
 
       value:
-        "🟣🌺",
+        "ðŸŸ£ðŸŒº",
 
       alt: {
         ms:
@@ -151,25 +166,30 @@ const assets:
         en:
           "Purple hibiscus"
       }
-    }
+    },
+    "quantity-apple-1": {
+      id: "quantity-apple-1", type: "quantity", value: "", itemAsset: "apple-red", count: 1,
+      alt: { ms: "Satu epal", en: "One apple" }
+    },
+    "quantity-apple-2": {
+      id: "quantity-apple-2", type: "quantity", value: "", itemAsset: "apple-red", count: 2,
+      alt: { ms: "Dua epal", en: "Two apples" }
+    },
+    "quantity-apple-3": {
+      id: "quantity-apple-3", type: "quantity", value: "", itemAsset: "apple-red", count: 3,
+      alt: { ms: "Tiga epal", en: "Three apples" }
+    },
   };
 
 
-export function getAsset(
-  assetId: string
-): AssetDefinition {
+export function getAsset(assetId: string): AssetDefinition {
   const asset =
-    assets[
-      assetId
-    ];
-
+    commercialAssetOverrides[assetId] ??
+    assets[assetId];
 
   if (!asset) {
-    throw new Error(
-      `Unknown asset: ${assetId}`
-    );
+    throw new Error(`Unknown asset: ${assetId}`);
   }
-
 
   return asset;
 }

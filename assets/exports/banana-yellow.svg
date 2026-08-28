@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-labelledby="title desc">
+  <title id="title">Yellow banana</title>
+  <desc id="desc">Original HIBEYA illustration of one ripe curved yellow banana.</desc>
+
+  <g stroke="#23333F" stroke-linecap="round" stroke-linejoin="round">
+    <path
+      d="M80 82
+         C94 92 102 104 108 121
+         C127 174 166 207 215 208
+         C235 208 251 202 265 191
+         C254 221 232 244 202 257
+         C169 271 132 264 106 241
+         C78 217 61 181 60 143
+         C59 119 65 98 80 82 Z"
+      fill="#F4C84A"
+      stroke-width="10"
+    />
+
+    <path
+      d="M80 83
+         C76 72 77 60 83 49
+         L98 55
+         C94 66 94 76 99 87"
+      fill="#D8A62E"
+      stroke-width="9"
+    />
+
+    <path
+      d="M83 49 L92 38"
+      fill="none"
+      stroke-width="9"
+    />
+
+    <path
+      d="M265 191
+         C273 187 278 181 282 173"
+      fill="none"
+      stroke-width="9"
+    />
+
+    <path
+      d="M279 171 L287 168"
+      fill="none"
+      stroke-width="9"
+    />
+
+    <path
+      d="M92 105
+         C111 163 151 226 221 228"
+      fill="none"
+      stroke="#FFE38A"
+      stroke-width="9"
+    />
+
+    <path
+      d="M107 221
+         C134 244 167 252 198 241"
+      fill="none"
+      stroke="#D6A82F"
+      stroke-width="6"
+      opacity="0.7"
+    />
+  </g>
+</svg>

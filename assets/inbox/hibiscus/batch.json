@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "batchId": "malaysian-garden-hibiscus",
+  "description": "Format-agnostic visual intake for the first Malaysian-context hibiscus family.",
+  "allowedExtensions": ["png", "webp", "svg"],
+  "preferredRuntimeFormat": "webp",
+  "assets": [
+    {
+      "id": "hibiscus-red",
+      "required": true,
+      "alt": {
+        "ms": "Bunga raya merah",
+        "en": "Red hibiscus"
+      },
+      "culturalReviewRequired": true
+    },
+    {
+      "id": "hibiscus-yellow",
+      "required": true,
+      "alt": {
+        "ms": "Bunga raya kuning",
+        "en": "Yellow hibiscus"
+      },
+      "culturalReviewRequired": true
+    },
+    {
+      "id": "hibiscus-purple",
+      "required": true,
+      "alt": {
+        "ms": "Bunga raya ungu",
+        "en": "Purple hibiscus"
+      },
+      "culturalReviewRequired": true
+    }
+  ]
+}

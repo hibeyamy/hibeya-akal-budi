@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "queueId": "learner-core",
+  "generatedFrom": "assets/manifests",
+  "items": [
+    {
+      "assetId": "apple-green",
+      "manifest": "assets/manifests/apple-green.json",
+      "brief": "assets/briefs/apple-green.json",
+      "priority": "replace-prototype",
+      "status": "brief-ready"
+    },
+    {
+      "assetId": "apple-red",
+      "manifest": "assets/manifests/apple-red.json",
+      "brief": "assets/briefs/apple-red.json",
+      "priority": "replace-prototype",
+      "status": "brief-ready"
+    },
+    {
+      "assetId": "banana-yellow",
+      "manifest": "assets/manifests/banana-yellow.json",
+      "brief": "assets/briefs/banana-yellow.json",
+      "priority": "replace-prototype",
+      "status": "brief-ready"
+    },
+    {
+      "assetId": "hibiscus-purple",
+      "manifest": "assets/manifests/hibiscus-purple.json",
+      "brief": "assets/briefs/hibiscus-purple.json",
+      "priority": "replace-prototype",
+      "status": "brief-ready"
+    },
+    {
+      "assetId": "hibiscus-red",
+      "manifest": "assets/manifests/hibiscus-red.json",
+      "brief": "assets/briefs/hibiscus-red.json",
+      "priority": "replace-prototype",
+      "status": "brief-ready"
+    },
+    {
+      "assetId": "hibiscus-yellow",
+      "manifest": "assets/manifests/hibiscus-yellow.json",
+      "brief": "assets/briefs/hibiscus-yellow.json",
+      "priority": "replace-prototype",
+      "status": "brief-ready"
+    }
+  ]
+}

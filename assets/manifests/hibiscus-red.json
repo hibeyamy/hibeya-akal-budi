@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "id": "hibiscus-red",
+  "status": "production",
+  "role": "learner-core",
+  "currentRepresentation": "png",
+  "sourceType": "original-ai-assisted",
+  "creator": "HIBEYA visual-production workflow",
+  "sourceFile": "assets/masters/hibiscus-red.png",
+  "sourceValue": null,
+  "commercialRightsConfirmed": true,
+  "originalityReviewed": true,
+  "culturalReviewRequired": true,
+  "culturalReviewed": true,
+  "childSafetyReviewed": true,
+  "commercialReady": true,
+  "replacementRequiredForCommercialRelease": false,
+  "notes": "Artwork ingested from the HIBEYA visual-production intake. Human visual, originality, commercial-rights, child-safety and cultural review remain mandatory before commercial approval.",
+  "runtime": {
+    "file": "packages/assets/src/generated/hibiscus-red.webp",
+    "alt": {
+      "ms": "Bunga raya merah",
+      "en": "Red hibiscus"
+    }
+  },
+  "reviewedBy": "HIBEYA owner",
+  "reviewedAt": "2026-08-21T14:55:58.596Z",
+  "runtimeOptimisation": {
+    "sourceMaster": "assets/masters/hibiscus-red.png",
+    "sourceSha256": "d469a928f7c717bf316406c43143681555a779b18c5b0d48bf79c71fb8bfabeb",
+    "runtimeSha256": "4ef2ad8c9b1f574299d220f05e003bc0d5d0c3edf4c3f7915a2932671f4d8ad1",
+    "masterDimensions": {
+      "width": 1254,
+      "height": 1254
+    },
+    "runtimeDimensions": {
+      "width": 640,
+      "height": 640
+    },
+    "runtimeFormat": "webp",
+    "quality": 82,
+    "maxEdge": 640,
+    "runtimeBytes": 53690
+  }
+}

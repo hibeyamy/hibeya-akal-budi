@@ -14,6 +14,54 @@ const manifestRoot =
   );
 
 
+const skillGraphPath =
+  path.join(
+    repoRoot,
+    "content",
+    "curriculum",
+    "skill-graph.json"
+  );
+
+
+const skillGraph =
+  readJson(
+    skillGraphPath
+  );
+
+
+const requiredPrerequisitesBySkill =
+  new Map();
+
+
+for (
+  const edge
+  of skillGraph.prerequisites ??
+    []
+) {
+  if (
+    edge.strength !==
+      "required"
+  ) {
+    continue;
+  }
+
+  const existing =
+    requiredPrerequisitesBySkill.get(
+      edge.skillId
+    ) ??
+    [];
+
+  existing.push(
+    edge.prerequisiteSkillId
+  );
+
+  requiredPrerequisitesBySkill.set(
+    edge.skillId,
+    existing
+  );
+}
+
+
 function fail(message) {
   console.error(
     `CONTENT COMPILER ERROR: ${message}`
@@ -59,6 +107,92 @@ function assertString(
     value.length >
       0,
     `${label} must be a non-empty string`
+  );
+}
+
+
+function isSafeDraftManifest(
+  manifest
+) {
+  return (
+    manifest &&
+    typeof manifest ===
+      "object" &&
+    manifest.catalogue?.enabled ===
+      false &&
+    manifest.activity?.metadata?.active ===
+      false &&
+    manifest.activity?.provenance?.originalityReviewed ===
+      false
+  );
+}
+
+
+function validateDraftManifest(
+  manifest,
+  filename
+) {
+  assert(
+    manifest &&
+    typeof manifest ===
+      "object",
+    `${filename}: draft manifest must be an object`
+  );
+
+  assertString(
+    manifest.exportName,
+    `${filename}.exportName`
+  );
+
+  assertString(
+    manifest.activity?.id,
+    `${filename}.activity.id`
+  );
+
+  assert(
+    manifest.catalogue?.enabled ===
+      false,
+    `${filename}: draft catalogue must remain disabled`
+  );
+
+  assert(
+    manifest.activity?.metadata?.active ===
+      false,
+    `${filename}: draft activity metadata must remain inactive`
+  );
+
+  assert(
+    manifest.activity?.provenance?.creator ===
+      "HIBEYA" &&
+    manifest.activity?.provenance?.originalityReviewed ===
+      false,
+    `${filename}: draft provenance must remain pending HIBEYA originality review`
+  );
+
+  assert(
+    manifest.activity?.wellbeing?.usesCountdownPressure ===
+      false &&
+    manifest.activity?.wellbeing?.usesLossAversion ===
+      false &&
+    manifest.activity?.wellbeing?.usesStreakPressure ===
+      false &&
+    manifest.activity?.wellbeing?.usesInfinitePlay ===
+      false &&
+    manifest.activity?.wellbeing?.usesBehaviouralAds ===
+      false,
+    `${filename}: draft wellbeing guardrails must remain disabled`
+  );
+
+  assert(
+    Array.isArray(
+      manifest.skillMappings
+    ) &&
+    manifest.skillMappings.some(
+      mapping =>
+        mapping.role ===
+          "primary"
+    ),
+    `${filename}: draft must declare at least one primary skill mapping`
   );
 }
 
@@ -197,6 +331,24 @@ function validateManifest(
     `${filename}: primary activity ageBand must be present in catalogue.ageBands`
   );
 
+  assert(
+    Array.isArray(
+      manifest.skillMappings
+    ) &&
+    manifest.skillMappings.length >
+      0,
+    `${filename}.skillMappings must contain at least one skill mapping`
+  );
+
+  assert(
+    manifest.skillMappings.some(
+      mapping =>
+        mapping.role ===
+          "primary"
+    ),
+    `${filename}.skillMappings must contain at least one primary skill`
+  );
+
   const insights =
     manifest.learningInsights;
 
@@ -245,7 +397,7 @@ assert(
 );
 
 
-const manifests =
+const allManifests =
   manifestFiles.map(
     filename => {
       const fullPath =
@@ -259,6 +411,24 @@ const manifests =
           fullPath
         );
 
+      if (
+        isSafeDraftManifest(
+          manifest
+        )
+      ) {
+        validateDraftManifest(
+          manifest,
+          filename
+        );
+
+        return {
+          filename,
+          manifest,
+          draft:
+            true
+        };
+      }
+
       validateManifest(
         manifest,
         filename
@@ -266,14 +436,41 @@ const manifests =
 
       return {
         filename,
-        manifest
+        manifest,
+        draft:
+          false
       };
     }
   );
 
 
+const manifests =
+  allManifests.filter(
+    item =>
+      !item.draft
+  );
+
+
+const draftManifests =
+  allManifests.filter(
+    item =>
+      item.draft
+  );
+
+
+for (
+  const {
+    filename
+  } of draftManifests
+) {
+  console.log(
+    `DRAFT SKIPPED: ${filename}`
+  );
+}
+
+
 const activityIds =
-  manifests.map(
+  allManifests.map(
     item =>
       item.manifest
         .activity
@@ -291,7 +488,7 @@ assert(
 
 
 const exportNames =
-  manifests.map(
+  allManifests.map(
     item =>
       item.manifest
         .exportName
@@ -360,6 +557,66 @@ function catalogueSource() {
       enabled:
         ${Boolean(c.enabled)},
 
+      sequence:
+        ${c.sequence},
+
+      difficulty:
+        ${manifest.activity.difficulty},
+
+      skillIds:
+        ${jsonTs(
+          Array.from(
+            new Set(
+              manifest.skillMappings.map(
+                mapping =>
+                  mapping.skillId
+              )
+            )
+          )
+        ).replace(/\n/g, "\n        ")},
+
+      skillMappings:
+        ${jsonTs(manifest.skillMappings).replace(/\n/g, "\n        ")},
+
+      primarySkillIds:
+        ${jsonTs(
+          Array.from(
+            new Set(
+              manifest.skillMappings
+                .filter(
+                  mapping =>
+                    mapping.role ===
+                      "primary"
+                )
+                .map(
+                  mapping =>
+                    mapping.skillId
+                )
+            )
+          )
+        ).replace(/\n/g, "\n        ")},
+
+      requiredPrerequisiteSkillIds:
+        ${jsonTs(
+          Array.from(
+            new Set(
+              manifest.skillMappings
+                .filter(
+                  mapping =>
+                    mapping.role ===
+                      "primary"
+                )
+                .flatMap(
+                  mapping =>
+                    requiredPrerequisitesBySkill.get(
+                      mapping.skillId
+                    ) ??
+                    []
+                )
+            )
+          )
+        ).replace(/\n/g, "\n        ")},
+
       ageBands:
         ${jsonTs(c.ageBands).replace(/\n/g, "\n        ")},
 
@@ -393,6 +650,28 @@ export interface PlayableActivity {
   version: number;
 
   enabled: boolean;
+
+  sequence: number;
+
+  difficulty: number;
+
+  skillIds:
+    readonly string[];
+
+  skillMappings:
+    readonly {
+      skillId: string;
+      role:
+        "primary" |
+        "supporting";
+      weight: number;
+    }[];
+
+  primarySkillIds:
+    readonly string[];
+
+  requiredPrerequisiteSkillIds:
+    readonly string[];
 
   ageBands:
     readonly AgeBand[];
@@ -472,6 +751,17 @@ export function getPlayableActivitiesForAgeBand(
             ageBand
           )
     )
+    .sort(
+      (
+        left,
+        right
+      ) =>
+        left.sequence -
+          right.sequence ||
+        left.id.localeCompare(
+          right.id
+        )
+    )
     .map(
       activity =>
         getPlayableActivity(
@@ -515,6 +805,17 @@ export {
 export {
   validatePlayableCatalogue
 } from "./validateCatalogue";
+
+
+export {
+  getEligibleActivitiesForLearner,
+  isActivityPrerequisiteEligible
+} from "./eligibility";
+
+
+export type {
+  LearnerEligibilityInput
+} from "./eligibility";
 
 
 export type {
@@ -847,6 +1148,6 @@ if (checkOnly) {
   );
 } else {
   console.log(
-    `CONTENT COMPILER: ${manifests.length} manifests compiled`
+    `CONTENT COMPILER: ${manifests.length} production manifests compiled; ${draftManifests.length} safe drafts skipped`
   );
 }

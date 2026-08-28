@@ -1,11 +1,17 @@
 import type {
-  StoredSession
+  StoredSession,
+  StoredAdaptiveObservation
 } from "./database";
 
 import {
   getPendingSessions,
   markSessionSynced
 } from "./session.repository";
+
+import {
+  getPendingAdaptiveObservations,
+  markAdaptiveObservationSynced
+} from "./adaptiveObservation.repository";
 
 
 export interface SessionSyncResult {
@@ -77,6 +83,87 @@ export async function processPendingSessions(
   return {
     attempted:
       sessions.length,
+
+    succeeded,
+
+    failed
+  };
+}
+
+
+
+export interface AdaptiveObservationSyncResult {
+  eventId:
+    string;
+
+  success:
+    boolean;
+
+  error?:
+    string;
+}
+
+
+export interface AdaptiveObservationSyncProvider {
+  syncAdaptiveObservation(
+    observation:
+      StoredAdaptiveObservation
+  ):
+    Promise<
+      AdaptiveObservationSyncResult
+    >;
+}
+
+
+export async function processPendingAdaptiveObservations(
+  provider:
+    AdaptiveObservationSyncProvider
+):
+  Promise<
+    SyncQueueResult
+  > {
+  const observations =
+    await getPendingAdaptiveObservations();
+
+  let succeeded =
+    0;
+
+  let failed =
+    0;
+
+  for (
+    const observation
+    of observations
+  ) {
+    try {
+      const result =
+        await provider
+          .syncAdaptiveObservation(
+            observation
+          );
+
+      if (
+        result.success
+      ) {
+        await markAdaptiveObservationSynced(
+          observation.eventId
+        );
+
+        succeeded +=
+          1;
+      } else {
+        failed +=
+          1;
+      }
+    } catch {
+      failed +=
+        1;
+    }
+  }
+
+  return {
+    attempted:
+      observations.length,
 
     succeeded,
 

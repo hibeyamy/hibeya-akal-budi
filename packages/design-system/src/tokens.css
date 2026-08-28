@@ -1,0 +1,62 @@
+:root {
+  --ab-brand-ink: #1f2937;
+  --ab-brand-warm: #b45309;
+  --ab-brand-soft: #fff7ed;
+
+  --ab-surface-page: #fffdf8;
+  --ab-surface-card: #ffffff;
+  --ab-surface-subtle: #f8fafc;
+
+  --ab-text-primary: #1f2937;
+  --ab-text-secondary: #475569;
+  --ab-text-muted: #64748b;
+  --ab-text-inverse: #ffffff;
+
+  --ab-feedback-success-surface: #ecfdf5;
+  --ab-feedback-success-text: #065f46;
+  --ab-feedback-gentle-surface: #fffbeb;
+  --ab-feedback-gentle-text: #92400e;
+  --ab-feedback-error-surface: #fef2f2;
+  --ab-feedback-error-text: #991b1b;
+
+  --ab-focus-ring: #f59e0b;
+
+  --ab-space-xs: 0.25rem;
+  --ab-space-sm: 0.5rem;
+  --ab-space-md: 1rem;
+  --ab-space-lg: 1.5rem;
+  --ab-space-xl: 2rem;
+  --ab-space-2xl: 3rem;
+
+  --ab-radius-sm: 0.75rem;
+  --ab-radius-md: 1rem;
+  --ab-radius-lg: 1.5rem;
+  --ab-radius-xl: 2rem;
+  --ab-radius-round: 9999px;
+
+  --ab-motion-quick: 120ms;
+  --ab-motion-gentle: 180ms;
+  --ab-motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+
+[data-ab-audience="learner"] {
+  --ab-touch-target-min: 56px;
+}
+
+
+[data-ab-audience="parent"] {
+  --ab-touch-target-min: 44px;
+}

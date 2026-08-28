@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "assetId": "hibiscus-purple",
+  "candidateFile": "assets/inbox/hibiscus/hibiscus-purple.png",
+  "masterFile": "assets/masters/hibiscus-purple.png",
+  "runtimeFile": "packages/assets/src/generated/hibiscus-purple.png",
+  "status": "approved",
+  "checks": {
+    "visualQuality": true,
+    "recognisableAsHibiscus": true,
+    "childSuitable": true,
+    "originalityReviewed": true,
+    "commercialRightsConfirmed": true,
+    "culturalReviewed": true
+  },
+  "approvedAt": "2026-08-21T14:55:58.601Z"
+}

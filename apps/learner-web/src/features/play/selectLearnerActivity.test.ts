@@ -5,75 +5,164 @@ import {
 } from "vitest";
 
 import {
+  getEligibleActivitiesForLearner,
+  playableActivities
+} from "@akal-budi/content-library";
+
+import type {
+  LearnerAgeBand
+} from "../../services/deviceActivationService";
+
+import {
   selectLearnerActivity
 } from "./selectLearnerActivity";
+
+
+function getSupportedLearnerAgeBand():
+  LearnerAgeBand {
+  const candidate =
+    playableActivities
+      .flatMap(
+        activity =>
+          activity.ageBands
+      )
+      .find(
+        (
+          ageBand
+        ): ageBand is LearnerAgeBand =>
+          ageBand ===
+            "2-3" ||
+          ageBand ===
+            "3-4" ||
+          ageBand ===
+            "4-5" ||
+          ageBand ===
+            "5-6"
+      );
+
+  if (!candidate) {
+    throw new Error(
+      "No playable learner age band is available in the current catalogue."
+    );
+  }
+
+  return candidate;
+}
 
 
 describe(
   "selectLearnerActivity",
   () => {
-
     it(
-      "selects eligible 3-4 content",
+      "follows prerequisite-eligible catalogue order",
       () => {
-        const activity =
-          selectLearnerActivity({
-            ageBand:
-              "3-4",
+        const ageBand =
+          getSupportedLearnerAgeBand();
 
-            lastCompletedActivityId:
-              null
+        const masteredSkillIds:
+          string[] = [];
+
+        const eligible =
+          getEligibleActivitiesForLearner({
+            ageBand,
+            masteredSkillIds
           });
 
-        expect(activity)
-          .not.toBeNull();
+        const selected =
+          selectLearnerActivity({
+            ageBand,
+
+            lastCompletedActivityId:
+              null,
+
+            completedActivityIds:
+              [],
+
+            masteredSkillIds
+          });
 
         expect(
-          activity
-            ?.ageBands
-            .includes(
-              "3-4"
-            )
-        ).toBe(true);
+          selected?.id ??
+          null
+        ).toBe(
+          eligible[0]?.id ??
+          null
+        );
       }
     );
 
 
     it(
-      "avoids immediate repetition when alternatives exist",
+      "keeps completion progression separate from mastery eligibility",
       () => {
+        const ageBand =
+          getSupportedLearnerAgeBand();
+
+        const masteredSkillIds:
+          string[] = [];
+
+        const eligible =
+          getEligibleActivitiesForLearner({
+            ageBand,
+            masteredSkillIds
+          });
+
         const first =
+          eligible[0];
+
+        if (!first) {
+          expect(
+            selectLearnerActivity({
+              ageBand,
+
+              lastCompletedActivityId:
+                null,
+
+              completedActivityIds:
+                [],
+
+              masteredSkillIds
+            })
+          ).toBeNull();
+
+          return;
+        }
+
+        const selected =
           selectLearnerActivity({
-            ageBand:
-              "3-4",
+            ageBand,
 
             lastCompletedActivityId:
-              null
+              first.id,
+
+            completedActivityIds:
+              [first.id],
+
+            masteredSkillIds
           });
 
-        expect(first)
-          .not.toBeNull();
-
-        const second =
-          selectLearnerActivity({
-            ageBand:
-              "3-4",
-
-            lastCompletedActivityId:
-              first?.id ??
-              null
-          });
-
-        expect(second)
-          .not.toBeNull();
+        const firstUncompleted =
+          eligible.find(
+            activity =>
+              activity.id !==
+                first.id
+          );
 
         if (
-          first &&
-          second
+          firstUncompleted
         ) {
           expect(
-            second.id
-          ).not.toBe(
+            selected?.id
+          ).toBe(
+            firstUncompleted.id
+          );
+        }
+        else {
+          // The resolver intentionally cycles only after all eligible
+          // activities are complete.
+          expect(
+            selected?.id
+          ).toBe(
             first.id
           );
         }
@@ -82,19 +171,41 @@ describe(
 
 
     it(
-      "does not serve unsupported content to 2-3",
+      "does not use completed activities as a substitute for mastered skills",
       () => {
-        expect(
+        const ageBand =
+          getSupportedLearnerAgeBand();
+
+        const selected =
           selectLearnerActivity({
-            ageBand:
-              "2-3",
+            ageBand,
 
             lastCompletedActivityId:
-              null
-          })
-        ).toBeNull();
+              null,
+
+            completedActivityIds:
+              [],
+
+            masteredSkillIds:
+              []
+          });
+
+        const eligible =
+          getEligibleActivitiesForLearner({
+            ageBand,
+
+            masteredSkillIds:
+              []
+          });
+
+        expect(
+          selected?.id ??
+          null
+        ).toBe(
+          eligible[0]?.id ??
+          null
+        );
       }
     );
-
   }
 );

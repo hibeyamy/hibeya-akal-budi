@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "node tools/deploy/verify-learner-deployment-env.mjs --platform && pnpm --filter learner-web build",
+  "outputDirectory": "apps/learner-web/dist"
+}
